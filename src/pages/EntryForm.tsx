@@ -74,6 +74,7 @@ interface EntryData {
   frequency: string;
   property_damage: boolean;
   injury: boolean;
+  points: number;
   parent_contact_status: string;
   admin_contact_status: string;
   counselor_contact_status: string;
@@ -106,6 +107,7 @@ const EMPTY_FORM: EntryData = {
   frequency: "",
   property_damage: false,
   injury: false,
+  points: 1,
   parent_contact_status: "",
   admin_contact_status: "",
   counselor_contact_status: "",
@@ -404,6 +406,7 @@ export default function EntryForm() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [celebration, setCelebration] = useState<{ points: number; studentName: string } | null>(null);
   const [extraOpen, setExtraOpen] = useState(false);
   const [draftRestored, setDraftRestored] = useState(false);
 
@@ -452,6 +455,7 @@ export default function EntryForm() {
               frequency: e.frequency || "",
               property_damage: !!e.property_damage,
               injury: !!e.injury,
+              points: Number(e.points || 0) || 1,
               parent_contact_status: e.parent_contact_status || "",
               admin_contact_status: e.admin_contact_status || "",
               counselor_contact_status: e.counselor_contact_status || "",
@@ -646,6 +650,7 @@ export default function EntryForm() {
         follow_up_date: form.follow_up_date,
         additional_notes: form.additional_notes,
         confidential_notes: form.confidential_notes,
+        points: form.entry_type === "positive" ? form.points : 0,
         doc_status: form.doc_status,
         doc_completion_date: form.doc_completion_date,
         doc_system_name: form.doc_system_name,
@@ -670,6 +675,10 @@ export default function EntryForm() {
           navigate("/dashboard", { replace: true });
         } else {
           setSuccess(true);
+          if (form.entry_type === "positive" && form.points > 0 && selectedStudent) {
+            setCelebration({ points: form.points, studentName: selectedStudent.display_name });
+            setTimeout(() => setCelebration(null), 2000);
+          }
         }
       } else {
         const data = await res.json();
@@ -700,33 +709,45 @@ export default function EntryForm() {
 
   if (success) {
     return (
-      <div className="card" style={{ textAlign: "center", padding: "var(--space-2xl) var(--space-md)" }}>
-        <div style={{ fontSize: "3rem", marginBottom: "var(--space-md)", color: "var(--color-success)", display: "flex", justifyContent: "center" }}>
-          <CheckCircle size={56} />
-        </div>
-        <h1 className="mb-sm">Entry Saved</h1>
-        <p className="text-muted mb-lg">
-          Your observation has been recorded successfully.
-        </p>
-        <div className="alert alert--info mb-lg" style={{ textAlign: "left" }}>
-          <strong>Reminder:</strong> Enter any required behavior, intervention, parent contact,
-          referral, or disciplinary documentation into your district&apos;s official LMS, student
-          information system, discipline platform, IEP system, or other approved record system.
-        </div>
-        <div className="flex gap-md justify-center">
-          <button className="btn btn--primary btn--lg" onClick={handleNewEntry}>
-            Add Another Entry
-          </button>
-          {selectedStudent && (
-            <button
-              className="btn btn--secondary btn--lg"
-              onClick={() => navigate(`/students/${selectedStudent.id}`)}
-            >
-              View Student Profile
-            </button>
+      <>
+        {celebration && (
+          <div className="points-celebration">
+            <div className="points-badge">+{celebration.points} points awarded!</div>
+          </div>
+        )}
+        <div className="card" style={{ textAlign: "center", padding: "var(--space-2xl) var(--space-md)" }}>
+          <div style={{ fontSize: "3rem", marginBottom: "var(--space-md)", color: "var(--color-success)", display: "flex", justifyContent: "center" }}>
+            <CheckCircle size={56} />
+          </div>
+          <h1 className="mb-sm">Entry Saved</h1>
+          <p className="text-muted mb-lg">
+            Your observation has been recorded successfully.
+          </p>
+          {celebration && (
+            <div className="alert alert--success mb-lg" style={{ textAlign: "center", fontSize: "1.1rem", fontWeight: 600 }}>
+              🌟 +{celebration.points} point{celebration.points !== 1 ? "s" : ""} awarded to {celebration.studentName}!
+            </div>
           )}
+          <div className="alert alert--info mb-lg" style={{ textAlign: "left" }}>
+            <strong>Reminder:</strong> Enter any required behavior, intervention, parent contact,
+            referral, or disciplinary documentation into your district&apos;s official LMS, student
+            information system, discipline platform, IEP system, or other approved record system.
+          </div>
+          <div className="flex gap-md justify-center">
+            <button className="btn btn--primary btn--lg" onClick={handleNewEntry}>
+              Add Another Entry
+            </button>
+            {selectedStudent && (
+              <button
+                className="btn btn--secondary btn--lg"
+                onClick={() => navigate(`/students/${selectedStudent.id}`)}
+              >
+                View Student Profile
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
@@ -855,6 +876,30 @@ export default function EntryForm() {
           <h2 className="card__title mb-sm">3. Entry Type</h2>
           <TypeChipGroup options={ENTRY_TYPES} selected={form.entry_type} onChange={(v) => updateForm({ entry_type: v })} />
         </section>
+
+        {/* ── 3b. Points (Positive entries only) ────────────────── */}
+        {form.entry_type === "positive" && selectedStudent && (
+          <section className="card" style={{ borderLeftColor: "var(--color-success)", borderLeftWidth: "3px", borderLeftStyle: "solid" }}>
+            <h2 className="card__title mb-sm" style={{ color: "var(--color-success-dark)" }}>🌟 Points Awarded</h2>
+            <p className="text-sm text-muted mb-sm">Recognize this positive behavior with points:</p>
+            <div className="points-chip-group">
+              {[1, 2, 3, 5, 10].map((pts) => (
+                <button
+                  key={pts}
+                  type="button"
+                  className={`points-chip${form.points === pts ? " points-chip--selected" : ""}`}
+                  onClick={() => updateForm({ points: pts })}
+                >
+                  +{pts}
+                </button>
+              ))}
+            </div>
+            <div className="points-preview">
+              <span style={{ fontSize: "1.2rem" }}>⭐</span>
+              Awarding <strong style={{ margin: "0 4px" }}>+{form.points} point{form.points !== 1 ? "s" : ""}</strong> to {selectedStudent.display_name}
+            </div>
+          </section>
+        )}
 
         {/* ── 4. Behavior Categories ──────────────────────────── */}
         <section className="card">

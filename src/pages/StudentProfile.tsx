@@ -15,6 +15,7 @@ interface ProfileStats {
   totalEntries: number; positiveEntries: number; correctiveEntries: number;
   entriesThisWeek: number; parentContacts: number; counselorAdminContacts: number;
   pendingDocs: number; followUpsDue: number;
+  pointsAwarded: number; pointsThisWeek: number;
 }
 interface Goal {
   id: number; title: string; description: string; status: string;
@@ -33,6 +34,7 @@ interface Entry {
   parent_contact_status: string; admin_contact_status: string;
   counselor_contact_status: string; follow_up_date: string;
   doc_status: string; doc_system_name: string;
+  points: number;
 }
 interface ChartCategory { name: string; count: number; }
 interface ChartWeek { week: string; positive: number; corrective: number; }
@@ -41,9 +43,10 @@ interface ChartIntervention {
   name: string; stopped: number; decreased: number; continued: number; escalated: number;
 }
 interface EntryStats {
-  byWeek: ChartWeek[]; byDayOfWeek: ChartDay[]; bySubject: ChartCategory[];
-  byLocation: ChartCategory[]; byCategory: ChartCategory[]; byTrigger: ChartCategory[];
-  byIntervention: ChartIntervention[]; positiveVsCorrectiveOverTime: ChartWeek[];
+  byWeek: ChartWeek[]; pointsByWeek: { week: string; points: number }[]; byDayOfWeek: ChartDay[];
+  bySubject: ChartCategory[]; byLocation: ChartCategory[]; byCategory: ChartCategory[];
+  byTrigger: ChartCategory[]; byIntervention: ChartIntervention[];
+  positiveVsCorrectiveOverTime: ChartWeek[];
 }
 
 /* ── Helpers ───────────────────────────────────────── */
@@ -225,9 +228,37 @@ function PositiveCorrectiveOverTime({ data }: { data: ChartWeek[] }) {
   );
 }
 
-function StatCard({ label, value, color, icon }: { label: string; value: string | number; color?: string; icon?: React.ReactNode }) {
+function PointsPerWeekChart({ data }: { data: { week: string; points: number }[] }) {
+  if (!data.length || data.every(d => d.points === 0)) {
+    return <div className="text-sm text-muted text-center" style={{ padding: "var(--space-xl)" }}>No points earned in this period</div>;
+  }
+  const maxVal = Math.max(...data.map(d => d.points), 1);
+  const w = 300; const h = 150; const pad = { top: 8, right: 8, bottom: 30, left: 8 };
+  const chartW = w - pad.left - pad.right;
+  const chartH = h - pad.top - pad.bottom;
+  const barW = Math.max(chartW / data.length - 6, 10);
   return (
-    <div className="stat-card">
+    <svg viewBox={`0 0 ${w} ${h}`} style={{ width: "100%", height: "auto" }} role="img" aria-label="Points earned per week">
+      {data.map((d, i) => {
+        const x = pad.left + i * (chartW / data.length) + 3;
+        const bh = (d.points / maxVal) * chartH;
+        return (
+          <g key={d.week}>
+            <rect x={x} y={pad.top + chartH - bh} width={barW} height={Math.max(bh, 1)} fill="var(--color-success)" rx="3" opacity="0.9" />
+            <text x={x + barW / 2} y={h - 6} textAnchor="middle" fontSize="8" fill="var(--color-gray-500)" transform={`rotate(-35 ${x + barW / 2} ${h - 6})`}>{d.week.slice(5)}</text>
+            {d.points > 0 && <text x={x + barW / 2} y={pad.top + chartH - bh - 3} textAnchor="middle" fontSize="9" fill="var(--color-success-dark)" fontWeight="600">{d.points}</text>}
+          </g>
+        );
+      })}
+      <rect x={pad.left} y={4} width={10} height={10} fill="var(--color-success)" rx="2" />
+      <text x={pad.left + 14} y={13} fontSize="9" fill="var(--color-gray-500)">Points</text>
+    </svg>
+  );
+}
+
+function StatCard({ label, value, color, icon, className }: { label: string; value: string | number; color?: string; icon?: React.ReactNode; className?: string }) {
+  return (
+    <div className={`stat-card${className ? ` ${className}` : ""}`}>
       {icon && <div className="stat-card__icon" style={color ? { color } : {}}>{icon}</div>}
       <div className="stat-card__value" style={color ? { color } : {}}>{value}</div>
       <div className="stat-card__label">{label}</div>
@@ -358,6 +389,8 @@ export default function StudentProfile() {
 
       {stats && (
         <div className="stat-cards-grid" style={{ marginBottom: "var(--space-md)" }}>
+          <StatCard label="Points Earned" value={stats.pointsAwarded} icon={<Star size={18} />} color="var(--color-success)" className="stat-card--points" />
+          <StatCard label="Points This Week" value={stats.pointsThisWeek} icon={<Star size={18} />} color="var(--color-success)" />
           <StatCard label="Total Entries" value={stats.totalEntries} icon={<FileText size={18} />} />
           <StatCard label="Positive" value={stats.positiveEntries} icon={<Star size={18} />} color="var(--color-success)" />
           <StatCard label="Corrective" value={stats.correctiveEntries} icon={<FileText size={18} />} color={stats.correctiveEntries > 0 ? "var(--color-danger)" : "var(--color-gray-500)"} />
@@ -442,6 +475,34 @@ export default function StudentProfile() {
         <ChartCard title="Behavior Categories"><HorizontalBarChart data={entryStats?.byCategory || []} color="var(--color-primary)" /></ChartCard>
         <ChartCard title="Possible Triggers"><HorizontalBarChart data={entryStats?.byTrigger || []} color="var(--color-warning)" /></ChartCard>
         <ChartCard title="Intervention Effectiveness"><InterventionChart data={entryStats?.byIntervention || []} /></ChartCard>
+      </div>
+
+      {/* Points Per Week Chart */}
+      <h2 className="mb-sm" style={{ marginTop: "var(--space-lg)" }}>Points History</h2>
+      <div className="charts-grid">
+        <ChartCard title="Points Earned Per Week">
+          <PointsPerWeekChart data={entryStats?.pointsByWeek || []} />
+        </ChartCard>
+        <div className="chart-card">
+          <div className="chart-card__title">Recent Points Earned</div>
+          <div className="chart-card__body">
+            {entries.filter(e => e.entry_type === "positive").slice(0, 5).length === 0 ? (
+              <div className="text-sm text-muted text-center" style={{ padding: "var(--space-xl)" }}>No points earned yet</div>
+            ) : (
+              <div className="points-history">
+                {entries.filter(e => e.entry_type === "positive").slice(0, 5).map((entry) => (
+                  <div key={entry.id} className="points-history-item">
+                    <span className="points-history-item__date">{entry.date}</span>
+                    <span className="points-history-item__points">+{entry.points || 0} pts</span>
+                    <span className="points-history-item__note">
+                      {entry.objective_observation ? entry.objective_observation.slice(0, 60) + (entry.objective_observation.length > 60 ? "..." : "") : entry.subject_activity || "Positive recognition"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {stats && <div style={{ marginTop: "var(--space-lg)" }}><PatternsToReview student={student} stats={stats} entryStats={entryStats} /></div>}

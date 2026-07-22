@@ -224,6 +224,12 @@ route("GET", "/api/students/:id", (req, params) => {
   const correctiveEntries = totalEntries - positiveEntries;
   const entriesThisWeek = count("SELECT COUNT(*) as c FROM behavior_entries WHERE student_id = ? AND date >= ?", studentId, weekAgo);
 
+  // Points stats
+  const pointsAwarded = (student as Record<string, unknown>).points_awarded ? Number((student as Record<string, unknown>).points_awarded) : 0;
+  const pointsThisWeek = (db.prepare(
+    "SELECT COALESCE(SUM(points), 0) as c FROM behavior_entries WHERE student_id = ? AND entry_type = 'positive' AND date >= ?"
+  ).get(studentId, weekAgo) as { c: number }).c;
+
   const parentContacts = count("SELECT COUNT(*) as c FROM contacts WHERE student_id = ? AND contact_type = 'parent'", studentId);
   const counselorAdminContacts = count("SELECT COUNT(*) as c FROM contacts WHERE student_id = ? AND contact_type IN ('counselor','administrator')", studentId);
 
@@ -256,6 +262,8 @@ route("GET", "/api/students/:id", (req, params) => {
       positiveEntries,
       correctiveEntries,
       entriesThisWeek,
+      pointsAwarded,
+      pointsThisWeek,
       parentContacts,
       counselorAdminContacts,
       pendingDocs,
@@ -368,7 +376,7 @@ route("POST", "/api/entries", async (req) => {
     if (f in body) pushField(f, JSON.stringify(body[f] || []));
   }
 
-  const integers = ["duration_minutes"];
+  const integers = ["duration_minutes", "points"];
   for (const f of integers) {
     if (f in body) pushField(f, Number(body[f] || 0));
   }
@@ -389,6 +397,13 @@ route("POST", "/api/entries", async (req) => {
 
   const query = `INSERT INTO behavior_entries (${fields.join(", ")}) VALUES (${placeholders.join(", ")})`;
   const result = db.prepare(query).run(...values);
+
+  // If this is a positive entry with points, update student's points_awarded
+  const finalEntryType = String(body.entry_type || "minor_concern");
+  const pointsValue = "points" in body ? Number(body.points || 0) : 0;
+  if (finalEntryType === "positive" && pointsValue > 0) {
+    db.prepare("UPDATE students SET points_awarded = points_awarded + ? WHERE id = ?").run(pointsValue, Number(student_id));
+  }
 
   const entry = db.prepare(`
     SELECT e.*, s.display_name as student_name, s.initials as student_initials
@@ -416,7 +431,7 @@ route("GET", "/api/entries/:id", (req, params) => {
 route("PUT", "/api/entries/:id", async (req, params) => {
   const user = requireAuth(req);
   const db = getDb();
-  const existing = db.prepare("SELECT * FROM behavior_entries WHERE id = ?").get(Number(params!.id));
+  const existing = db.prepare("SELECT * FROM behavior_entries WHERE id = ?").get(Number(params!.id)) as Record<string, unknown>;
   if (!existing) return json({ error: "Entry not found" }, 404);
 
   const body = await parseBody(req);
@@ -424,7 +439,7 @@ route("PUT", "/api/entries/:id", async (req, params) => {
     "date", "time", "subject_activity", "location", "staff_member", "entry_type",
     "behavior_categories", "objective_observation", "possible_triggers", "interventions",
     "student_response", "outcome", "people_involved", "duration_minutes", "frequency",
-    "property_damage", "injury", "parent_contact_status", "admin_contact_status",
+    "property_damage", "injury", "points", "parent_contact_status", "admin_contact_status",
     "counselor_contact_status", "follow_up_date", "additional_notes", "attachment_url",
     "confidential_notes", "doc_status", "doc_completion_date", "doc_system_name",
     "doc_reference_number", "doc_note"
@@ -437,7 +452,7 @@ route("PUT", "/api/entries/:id", async (req, params) => {
       let val: unknown;
       if (["behavior_categories", "possible_triggers", "interventions", "student_response", "outcome"].includes(f))
         val = JSON.stringify(body[f]);
-      else if (["property_damage", "injury", "duration_minutes"].includes(f))
+      else if (["property_damage", "injury", "duration_minutes", "points"].includes(f))
         val = Number(body[f]);
       else val = String(body[f] || "");
       sets.push(`${f} = ?`);
@@ -449,6 +464,29 @@ route("PUT", "/api/entries/:id", async (req, params) => {
     sets.push("updated_at = datetime('now')");
     values.push(Number(params!.id));
     db.prepare(`UPDATE behavior_entries SET ${sets.join(", ")} WHERE id = ?`).run(...values);
+  }
+
+  // Handle points adjustment if entry_type changed
+  const oldType = String(existing.entry_type || "");
+  const newType = "entry_type" in body ? String(body.entry_type || "") : oldType;
+  const oldPoints = Number(existing.points || 0);
+  const newPoints = "points" in body ? Number(body.points || 0) : oldPoints;
+  const studentId = Number(existing.student_id);
+
+  // If changed from corrective to positive: add new points
+  if (oldType !== "positive" && newType === "positive" && newPoints > 0) {
+    db.prepare("UPDATE students SET points_awarded = points_awarded + ? WHERE id = ?").run(newPoints, studentId);
+  }
+  // If changed from positive to corrective: subtract old points
+  else if (oldType === "positive" && newType !== "positive" && oldPoints > 0) {
+    db.prepare("UPDATE students SET points_awarded = MAX(0, points_awarded - ?) WHERE id = ?").run(oldPoints, studentId);
+  }
+  // If still positive but points changed: adjust the difference
+  else if (oldType === "positive" && newType === "positive" && oldPoints !== newPoints) {
+    const diff = newPoints - oldPoints;
+    if (diff !== 0) {
+      db.prepare("UPDATE students SET points_awarded = MAX(0, points_awarded + ?) WHERE id = ?").run(diff, studentId);
+    }
   }
 
   const entry = db.prepare(`
@@ -477,6 +515,7 @@ route("GET", "/api/entries/stats", (req) => {
 
   // By week (last 8 weeks)
   const byWeek: { week: string; positive: number; corrective: number }[] = [];
+  const pointsByWeek: { week: string; points: number }[] = [];
   for (let i = 7; i >= 0; i--) {
     const weekEnd = new Date(today);
     weekEnd.setDate(weekEnd.getDate() - i * 7);
@@ -493,6 +532,11 @@ route("GET", "/api/entries/stats", (req) => {
       sid, ws, we
     );
     byWeek.push({ week: ws, positive: pos, corrective: corr });
+
+    const pts = (db.prepare(
+      "SELECT COALESCE(SUM(points), 0) as c FROM behavior_entries WHERE student_id = ? AND entry_type = 'positive' AND date >= ? AND date <= ?"
+    ).get(sid, ws, we) as { c: number }).c;
+    pointsByWeek.push({ week: ws, points: pts });
   }
 
   // By day of week
@@ -561,6 +605,7 @@ route("GET", "/api/entries/stats", (req) => {
 
   return json({
     byWeek,
+    pointsByWeek,
     byDayOfWeek,
     bySubject,
     byLocation,
@@ -890,6 +935,10 @@ route("GET", "/api/dashboard/stats", (req) => {
     ? Math.round(successfulOutcomes / totalCorrective * 100)
     : 0;
 
+  const totalPointsAwardedThisWeek = (db.prepare(
+    "SELECT COALESCE(SUM(points), 0) as c FROM behavior_entries WHERE entry_type = 'positive' AND date >= ? AND date <= ?"
+  ).get(thisMondayStr, todayStr) as { c: number }).c;
+
   const stats = {
     totalEntriesThisWeek: totalThisWeek,
     weeklyChangePct: Math.round(weeklyChange),
@@ -900,6 +949,7 @@ route("GET", "/api/dashboard/stats", (req) => {
     followUpsDue,
     parentContactsPending,
     interventionSuccessRate,
+    totalPointsAwardedThisWeek,
   };
 
   // ---- Entries by Day (last 7 days as Mon-Sun) ----
@@ -1095,6 +1145,17 @@ route("GET", "/api/dashboard/stats", (req) => {
     }
   }
 
+  // ---- Top Point Earners (positive recognition, top 5) ----
+  const topPointEarners = (db.prepare(`
+    SELECT s.id, s.display_name, s.initials, s.grade, s.points_awarded,
+      (SELECT COALESCE(SUM(points), 0) FROM behavior_entries WHERE student_id = s.id AND entry_type = 'positive' AND date >= ?) as points_this_week
+    FROM students s
+    WHERE s.active = 1
+    ORDER BY s.points_awarded DESC
+    LIMIT 5
+  `).all(thisMondayStr) as { id: number; display_name: string; initials: string; grade: string; points_awarded: number; points_this_week: number }[])
+    .filter(s => s.points_awarded > 0);
+
   return json({
     stats,
     entriesByDay,
@@ -1108,6 +1169,7 @@ route("GET", "/api/dashboard/stats", (req) => {
     recentEntries,
     byType,
     alerts,
+    topPointEarners,
   });
 });
 

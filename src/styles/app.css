@@ -2600,3 +2600,262 @@ a:hover {
   color: var(--color-danger-dark);
   text-decoration: underline;
 }
+
+/* ═══════════════════════════════════════════════════════
+   Points System
+   ═══════════════════════════════════════════════════════ */
+
+/* Points Chip */
+.points-chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.points-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-family: var(--font-sans);
+  border: 2px solid var(--color-gray-200);
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+  color: var(--color-gray-600);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.15s, box-shadow 0.15s;
+  user-select: none;
+}
+
+.points-chip:hover {
+  background: var(--color-success-bg);
+  border-color: var(--color-success);
+  color: var(--color-success-dark);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);
+}
+
+.points-chip--selected {
+  background: var(--color-success-gradient);
+  border-color: var(--color-success-dark);
+  color: var(--color-white);
+  transform: scale(1.08);
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35);
+  animation: pointsChipPulse 0.35s ease-out;
+}
+
+.points-chip--selected:hover {
+  background: var(--color-success-gradient);
+  color: var(--color-white);
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.45);
+}
+
+@keyframes pointsChipPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1.08); }
+}
+
+/* Points Preview */
+.points-preview {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-success-bg);
+  border: 1px solid #A7F3D0;
+  border-radius: var(--radius-md);
+  color: var(--color-success-dark);
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-top: var(--space-sm);
+}
+
+/* Points Celebration Animation */
+.points-celebration {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2000;
+  pointer-events: none;
+  animation: pointsCelebrate 1.8s ease-out forwards;
+}
+
+.points-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-md) var(--space-xl);
+  background: var(--color-success-gradient);
+  color: var(--color-white);
+  font-size: 1.5rem;
+  font-weight: 800;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 40px rgba(16, 185, 129, 0.4);
+  animation: pointsBadgeBounce 1.8s ease-out forwards;
+}
+
+@keyframes pointsCelebrate {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes pointsBadgeBounce {
+  0% { transform: scale(0.3); }
+  15% { transform: scale(1.15); }
+  30% { transform: scale(0.95); }
+  45% { transform: scale(1.05); }
+  60% { transform: scale(1); }
+  100% { transform: scale(1); }
+}
+
+/* Points Stat Card (green highlight) */
+.stat-card--points {
+  border-top-color: var(--color-success) !important;
+  background: linear-gradient(180deg, var(--color-success-bg) 0%, var(--color-white) 60%);
+}
+
+.stat-card--points .stat-card__icon {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.stat-card--points .stat-card__value {
+  color: var(--color-success-dark);
+}
+
+/* Points History List */
+.points-history {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.points-history-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-success-bg);
+  border: 1px solid #A7F3D0;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+}
+
+.points-history-item__date {
+  color: var(--color-gray-500);
+  font-size: 0.8rem;
+  min-width: 90px;
+}
+
+.points-history-item__points {
+  font-weight: 700;
+  color: var(--color-success-dark);
+  min-width: 60px;
+  text-align: right;
+}
+
+.points-history-item__note {
+  color: var(--color-gray-700);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Top Point Earners */
+.top-earners-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.top-earner-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-md);
+  transition: transform 0.15s, box-shadow 0.15s;
+  text-decoration: none;
+  color: inherit;
+}
+
+.top-earner-item:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+  border-color: var(--color-success);
+}
+
+.top-earner-item__rank {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-gray-400);
+  min-width: 24px;
+  text-align: center;
+}
+
+.top-earner-item__rank--gold {
+  color: #D4A017;
+  font-size: 1rem;
+}
+
+.top-earner-item__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  background: var(--color-success-bg);
+  color: var(--color-success-dark);
+  font-weight: 700;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.top-earner-item__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.top-earner-item__name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--color-gray-800);
+}
+
+.top-earner-item__meta {
+  font-size: 0.75rem;
+  color: var(--color-gray-500);
+}
+
+.top-earner-item__points {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--color-success-dark);
+  text-align: right;
+}
+
+.top-earner-item__points-label {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--color-gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Points Per Week Chart (green bar) */
+.points-week-chart {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}

@@ -11,8 +11,25 @@ export function getDb(): Database {
     _db.exec("PRAGMA journal_mode = WAL");
     _db.exec("PRAGMA foreign_keys = ON");
     initSchema(_db);
+    runMigrations(_db);
   }
   return _db;
+}
+
+function runMigrations(db: Database): void {
+  // Add points columns if they don't exist (for existing databases)
+  const migrators: [string, string][] = [
+    ["behavior_entries", "ALTER TABLE behavior_entries ADD COLUMN points INTEGER NOT NULL DEFAULT 0"],
+    ["students", "ALTER TABLE students ADD COLUMN points_awarded INTEGER NOT NULL DEFAULT 0"],
+  ];
+
+  for (const [table, sql] of migrators) {
+    const cols = db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[];
+    const colNames = new Set(cols.map(c => c.name));
+    if (!colNames.has(sql.includes("points_awarded") ? "points_awarded" : "points")) {
+      try { db.exec(sql); } catch {}
+    }
+  }
 }
 
 function initSchema(db: Database): void {
@@ -39,6 +56,7 @@ function initSchema(db: Database): void {
       grade TEXT DEFAULT '',
       classroom TEXT DEFAULT '',
       active INTEGER NOT NULL DEFAULT 1,
+      points_awarded INTEGER NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
@@ -63,6 +81,7 @@ function initSchema(db: Database): void {
       frequency TEXT DEFAULT '',
       property_damage INTEGER NOT NULL DEFAULT 0,
       injury INTEGER NOT NULL DEFAULT 0,
+      points INTEGER NOT NULL DEFAULT 0,
       parent_contact_status TEXT DEFAULT '' CHECK(parent_contact_status IN ('','not_contacted','contacted','voicemail','email_sent','letter_sent')),
       admin_contact_status TEXT DEFAULT '' CHECK(admin_contact_status IN ('','not_contacted','contacted','voicemail','email_sent')),
       counselor_contact_status TEXT DEFAULT '' CHECK(counselor_contact_status IN ('','not_contacted','contacted','voicemail','email_sent')),
@@ -203,6 +222,13 @@ export function seedDemoData(db: Database): void {
   if (entryCount.c === 0) {
     seedDemoEntries(db);
     console.log("Seeded demo entries with varied data");
+
+    // Compute points_awarded for all students from their entries
+    const students = db.prepare("SELECT id FROM students").all() as { id: number }[];
+    const updatePoints = db.prepare("UPDATE students SET points_awarded = (SELECT COALESCE(SUM(points), 0) FROM behavior_entries WHERE student_id = ? AND entry_type = 'positive') WHERE id = ?");
+    for (const s of students) {
+      updatePoints.run(s.id, s.id);
+    }
   }
 
   // Seed goals if none (independent of entries)
@@ -219,9 +245,9 @@ function seedDemoEntries(db: Database): void {
       student_id, user_id, date, time, subject_activity, location, staff_member,
       entry_type, behavior_categories, objective_observation, possible_triggers,
       interventions, student_response, outcome, people_involved, duration_minutes,
-      frequency, property_damage, injury, parent_contact_status,
+      frequency, property_damage, injury, points, parent_contact_status,
       follow_up_date, doc_status, doc_system_name, doc_reference_number
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   const insertFollowUp = db.prepare(`
@@ -383,6 +409,9 @@ function seedDemoEntries(db: Database): void {
       // Duration
       const duration = isPositive ? 0 : 2 + Math.floor(Math.random() * 25);
 
+      // Points for positive entries
+      const points = isPositive ? [1, 1, 2, 2, 3, 3, 5, 10][Math.floor(Math.random() * 8)] : 0;
+
       const result = insertEntry.run(
         studentId, 1, formatDate(entryDate), timeStr,
         pick(subjects), pick(locations), "Ms. Rodriguez",
@@ -396,6 +425,7 @@ function seedDemoEntries(db: Database): void {
         "", duration, pick(["once", "2-3 times", "repeatedly"]),
         entryType === "major_concern" ? (Math.random() > 0.8 ? 1 : 0) : 0,
         entryType === "crisis" ? (Math.random() > 0.5 ? 1 : 0) : 0,
+        points,
         parentContact,
         followUpDate, docStatus, docSystemName, docRef
       );

@@ -14,6 +14,7 @@ interface DashboardStats {
   followUpsDue: number;
   parentContactsPending: number;
   interventionSuccessRate: number;
+  totalPointsAwardedThisWeek: number;
 }
 
 interface DayEntry { day: string; positive: number; corrective: number; }
@@ -27,6 +28,7 @@ interface InterventionEntry {
   escalated: number;
 }
 interface StudentTrend { id: number; name: string; initials: string; recent: number; prior: number; change: number; }
+interface TopPointEarner { id: number; display_name: string; initials: string; grade: string; points_awarded: number; points_this_week: number; }
 interface DashboardEntry {
   id: number;
   student_name: string;
@@ -52,6 +54,7 @@ interface DashboardData {
   recentEntries: DashboardEntry[];
   byType: { entry_type: string; count: number }[];
   alerts: AlertItem[];
+  topPointEarners: TopPointEarner[];
 }
 
 /* ── Helpers ───────────────────────────────────────── */
@@ -344,7 +347,7 @@ export default function Dashboard() {
   if (!data) return <div className="empty-state"><span className="empty-state__icon"><BarChart3 size={40} /></span><p>No dashboard data available.</p></div>;
 
   const { stats, entriesByDay, entriesByTime, positiveVsCorrective, topCategories, topTriggers,
-    interventionEffectiveness, studentsIncreased, studentsImproved, recentEntries, alerts } = data;
+    interventionEffectiveness, studentsIncreased, studentsImproved, recentEntries, alerts, topPointEarners } = data;
   const changeArrow = stats.weeklyChangePct >= 0 ? "\u2191" : "\u2193";
   const changeClass = stats.weeklyChangePct >= 0
     ? (stats.weeklyChangePct > 20 ? "var(--color-danger)" : "var(--color-gray-500)")
@@ -397,6 +400,8 @@ export default function Dashboard() {
           sub={`${changeArrow} ${Math.abs(stats.weeklyChangePct)}% vs last week`} subColor={changeClass} />
         <StatCard label="Positive entries" value={stats.positiveCount}
           icon={<Star size={18} />} color="var(--color-success)" />
+        <StatCard label="Points this week" value={stats.totalPointsAwardedThisWeek}
+          icon={<Sparkles size={18} />} color="var(--color-success)" />
         <StatCard label="Corrective entries" value={stats.correctiveCount}
           icon={<FileText size={18} />} color={stats.correctiveCount > 0 ? "var(--color-danger)" : "var(--color-gray-500)"} />
         <StatCard label="Active students" value={stats.activeStudentsCount}
@@ -458,6 +463,37 @@ export default function Dashboard() {
           <StudentTrendChart data={studentsImproved} type="improved" />
         </ChartCard>
       </div>
+
+      {/* Top Point Earners */}
+      <h2 className="mb-sm" style={{ marginTop: "var(--space-lg)" }}>Top Point Earners</h2>
+      {topPointEarners && topPointEarners.length > 0 ? (
+        <div className="top-earners-list">
+          {topPointEarners.map((earner, i) => (
+            <Link to={`/students/${earner.id}`} key={earner.id} className="top-earner-item">
+              <span className={`top-earner-item__rank${i === 0 ? " top-earner-item__rank--gold" : ""}`}>
+                {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i + 1}`}
+              </span>
+              <span className="top-earner-item__avatar">{earner.initials}</span>
+              <div className="top-earner-item__info">
+                <div className="top-earner-item__name">{earner.display_name}</div>
+                <div className="top-earner-item__meta">Grade {earner.grade}</div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div className="top-earner-item__points">{earner.points_awarded}</div>
+                <div className="top-earner-item__points-label">total pts</div>
+                {earner.points_this_week > 0 && (
+                  <div style={{ fontSize: "0.7rem", color: "var(--color-success)" }}>+{earner.points_this_week} this week</div>
+                )}
+              </div>
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <div className="empty-state" style={{ padding: "var(--space-lg)" }}>
+          <span className="empty-state__icon"><Sparkles size={32} /></span>
+          <p style={{ fontSize: "0.85rem" }}>No points earned yet. Record positive entries to see top point earners here.</p>
+        </div>
+      )}
 
       {/* Recent Activity */}
       <h2 className="mb-sm" style={{ marginTop: "var(--space-lg)" }}>Recent Activity</h2>
