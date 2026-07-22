@@ -5,6 +5,7 @@ import {
   FileText, Star, Users, CalendarClock, Phone, Building2, ClipboardList, Bell,
   PlusCircle, Target, User, AlertTriangle, ChevronDown, ChevronRight
 } from "lucide-react";
+import { getAvatarUrl } from "../lib/avatars";
 
 /* ── Types ─────────────────────────────────────────── */
 interface StudentData {
@@ -362,7 +363,9 @@ export default function StudentProfile() {
     <div className="student-profile">
       <div className="card">
         <div className="flex items-start gap-md" style={{ flexWrap: "wrap" }}>
-          <div className="student-profile__avatar" style={{ background: "var(--color-primary)" }}>{student.initials}</div>
+          <div className="student-profile__avatar" style={{ background: "var(--color-primary-bg)" }}>
+            <img src={getAvatarUrl(student.initials)} alt="" />
+          </div>
           <div style={{ flex: 1, minWidth: 200 }}>
             <div className="flex items-center gap-sm" style={{ flexWrap: "wrap" }}>
               <h1 style={{ marginBottom: 0 }}>{student.display_name}</h1>

@@ -160,16 +160,19 @@ export default function Layout() {
             const isActive =
               location.pathname === item.path ||
               (item.path !== "/" && location.pathname.startsWith(item.path + "/"));
+            const isQuickEntry = item.path === "/entry";
             return (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`bottom-nav__item${isActive ? " bottom-nav__item--active" : ""}`}
+                className={`bottom-nav__item${isActive ? " bottom-nav__item--active" : ""}${isQuickEntry ? " bottom-nav__item--fab" : ""}`}
                 aria-current={isActive ? "page" : undefined}
                 aria-label={item.label}
               >
-                <span className="bottom-nav__icon" aria-hidden="true">{item.icon}</span>
-                <span>{item.label}</span>
+                <span className="bottom-nav__icon" aria-hidden="true">
+                  {isQuickEntry ? <Plus size={26} /> : item.icon}
+                </span>
+                {!isQuickEntry && <span>{item.label}</span>}
               </Link>
             );
           })}

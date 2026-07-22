@@ -281,22 +281,59 @@ export default function Landing() {
         <div className="landing-hero__inner">
           <div className="landing-hero__text">
             <h1 className="landing-hero__headline">
-              Track behavior.<br />Identify patterns.<br />Document what works.
+              Every student has<br />a story worth<br /><span style={{ background: "linear-gradient(135deg, #FCD34D, #FB923C)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>celebrating</span>.
             </h1>
             <p className="landing-hero__sub">
-              A practical behavior and intervention tracker designed for real classrooms.
+              Track behavior, celebrate growth, and document patterns — all in under 30 seconds. Your classroom deserves a tool as warm and supportive as you are.
             </p>
             <div className="landing-hero__actions">
               <Link to="/login" className="btn btn--primary btn--lg">
-                Try the Demo
+                <Sparkles size={20} /> Try the Demo
               </Link>
               <a href="#features" className="btn btn--secondary btn--lg">
-                Learn More
+                See How It Works
               </a>
             </div>
           </div>
           <div className="landing-hero__graphic" aria-hidden="true">
-            <ClipboardIcon size={96} />
+            <div style={{ position: "relative" }}>
+              <div style={{
+                width: 160, height: 160,
+                borderRadius: "50%",
+                background: "linear-gradient(135deg, rgba(255,255,255,0.18), rgba(255,255,255,0.05))",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                boxShadow: "0 0 60px rgba(253, 224, 71, 0.3)",
+                border: "3px solid rgba(255,255,255,0.25)",
+              }}>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: "3rem", lineHeight: 1 }}>⭐</div>
+                  <div style={{ fontSize: "2rem", fontWeight: 800, color: "#FCD34D", lineHeight: 1 }}>+5</div>
+                  <div style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.8)", marginTop: 4 }}>points!</div>
+                </div>
+              </div>
+              {/* Decorative mini-monsters */}
+              <div style={{
+                position: "absolute", top: -16, right: -8,
+                width: 44, height: 44, borderRadius: "50%",
+                background: "linear-gradient(135deg, #34D399, #10B981)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: "1.4rem", boxShadow: "0 4px 16px rgba(16,185,129,0.4)",
+              }}>🦊</div>
+              <div style={{
+                position: "absolute", bottom: -8, left: -12,
+                width: 48, height: 48, borderRadius: "50%",
+                background: "linear-gradient(135deg, #A78BFA, #7C3AED)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: "1.5rem", boxShadow: "0 4px 16px rgba(124,58,237,0.4)",
+              }}>🐙</div>
+              <div style={{
+                position: "absolute", bottom: 12, right: -20,
+                width: 36, height: 36, borderRadius: "50%",
+                background: "linear-gradient(135deg, #FB923C, #F97316)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: "1.2rem", boxShadow: "0 4px 12px rgba(249,115,22,0.4)",
+              }}>🐸</div>
+            </div>
           </div>
         </div>
       </header>

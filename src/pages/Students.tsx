@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useLegacyToken } from "../lib/auth";
 import { Users, Search, Target, FileText, ClipboardList, ChevronRight, X, Plus } from "lucide-react";
+import { getAvatarUrl } from "../lib/avatars";
 
 /* ── Types ─────────────────────────────────────────── */
 interface Student {
@@ -249,9 +250,9 @@ export default function Students() {
                 <div className="student-list-card">
                   <div
                     className="student-list-card__avatar"
-                    style={{ background: avatarColor(s.initials) }}
+                    style={{ background: "var(--color-primary-bg)" }}
                   >
-                    {s.initials}
+                    <img src={getAvatarUrl(s.initials)} alt="" />
                   </div>
 
                   <div className="student-list-card__info">

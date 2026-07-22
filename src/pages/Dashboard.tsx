@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useLegacyToken } from "../lib/auth";
 import { BarChart3, Sparkles, ClipboardList, Users, AlertTriangle, Bell, TrendingUp, Phone, FileText, CheckCircle, Star } from "lucide-react";
+import { getAvatarUrl } from "../lib/avatars";
 
 /* ── Types ─────────────────────────────────────────── */
 interface DashboardStats {
@@ -473,7 +474,9 @@ export default function Dashboard() {
               <span className={`top-earner-item__rank${i === 0 ? " top-earner-item__rank--gold" : ""}`}>
                 {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i + 1}`}
               </span>
-              <span className="top-earner-item__avatar">{earner.initials}</span>
+              <span className="top-earner-item__avatar">
+                <img src={getAvatarUrl(earner.initials)} alt="" />
+              </span>
               <div className="top-earner-item__info">
                 <div className="top-earner-item__name">{earner.display_name}</div>
                 <div className="top-earner-item__meta">Grade {earner.grade}</div>
@@ -511,7 +514,9 @@ export default function Dashboard() {
               <div className="card" style={{ cursor: "pointer" }}>
                 <div className="card__header">
                   <div className="flex items-center gap-sm">
-                    <span className="student-avatar">{entry.student_initials}</span>
+                    <span className="student-avatar">
+                      <img src={getAvatarUrl(entry.student_initials)} alt="" />
+                    </span>
                     <div>
                       <div style={{ fontWeight: 600, fontSize: "0.925rem" }}>{entry.student_name}</div>
                       <div className="text-sm text-muted">{timeAgo(entry.date)} at {entry.time || "\u2014"}</div>

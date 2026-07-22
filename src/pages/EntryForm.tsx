@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, type FormEvent } from "react"
 import { useNavigate, useParams } from "react-router-dom";
 import { useLegacyToken } from "../lib/auth";
 import { CheckCircle, AlertTriangle } from "lucide-react";
+import { getAvatarUrl } from "../lib/avatars";
 
 // ─── Inline Critical Styles (build workaround) ──────────────────────
 
@@ -712,19 +713,32 @@ export default function EntryForm() {
       <>
         {celebration && (
           <div className="points-celebration">
-            <div className="points-badge">+{celebration.points} points awarded!</div>
+            <div className="points-celebration__backdrop" />
+            <div className="points-sparkles">
+              {Array.from({ length: 12 }).map((_, i) => (
+                <div key={`sparkle-${i}`} className="points-sparkle" />
+              ))}
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={`confetti-${i}`} className="points-confetti" />
+              ))}
+            </div>
+            <div className="points-badge">
+              <div className="points-badge__stars">🌟</div>
+              <div className="points-badge__text">+{celebration.points} point{celebration.points !== 1 ? "s" : ""}!</div>
+              <div className="points-badge__student">awarded to {celebration.studentName}</div>
+            </div>
           </div>
         )}
-        <div className="card" style={{ textAlign: "center", padding: "var(--space-2xl) var(--space-md)" }}>
+        <div className="card" style={{ textAlign: "center", padding: "var(--space-2xl) var(--space-md)", borderTop: "4px solid var(--color-success)", borderLeft: "4px solid var(--color-success)", background: "linear-gradient(180deg, var(--color-mint-bg) 0%, var(--color-white) 40%)" }}>
           <div style={{ fontSize: "3rem", marginBottom: "var(--space-md)", color: "var(--color-success)", display: "flex", justifyContent: "center" }}>
-            <CheckCircle size={56} />
+            <CheckCircle size={64} />
           </div>
-          <h1 className="mb-sm">Entry Saved</h1>
+          <h1 className="mb-sm" style={{ color: "var(--color-success-dark)" }}>Entry Saved!</h1>
           <p className="text-muted mb-lg">
             Your observation has been recorded successfully.
           </p>
           {celebration && (
-            <div className="alert alert--success mb-lg" style={{ textAlign: "center", fontSize: "1.1rem", fontWeight: 600 }}>
+            <div className="alert alert--success mb-lg" style={{ textAlign: "center", fontSize: "1.15rem", fontWeight: 700 }}>
               🌟 +{celebration.points} point{celebration.points !== 1 ? "s" : ""} awarded to {celebration.studentName}!
             </div>
           )}
@@ -735,7 +749,7 @@ export default function EntryForm() {
           </div>
           <div className="flex gap-md justify-center">
             <button className="btn btn--primary btn--lg" onClick={handleNewEntry}>
-              Add Another Entry
+              + Add Another Entry
             </button>
             {selectedStudent && (
               <button
@@ -793,7 +807,9 @@ export default function EntryForm() {
                           className="student-dropdown__item"
                           onClick={() => selectStudent(s)}
                         >
-                          <span className="student-avatar">{s.initials}</span>
+                          <span className="student-avatar">
+                            <img src={getAvatarUrl(s.initials)} alt="" />
+                          </span>
                           <span className="student-info">
                             <strong>{s.display_name}</strong>
                             <span className="text-sm text-muted">
@@ -809,7 +825,9 @@ export default function EntryForm() {
             ) : (
               <div className="student-card">
                 <div className="flex items-center gap-md">
-                  <span className="student-avatar student-avatar--lg">{selectedStudent.initials}</span>
+                  <span className="student-avatar student-avatar--lg">
+                    <img src={getAvatarUrl(selectedStudent.initials)} alt="" />
+                  </span>
                   <div>
                     <strong style={{ fontSize: "1.05rem" }}>{selectedStudent.display_name}</strong>
                     <div className="text-sm text-muted">
