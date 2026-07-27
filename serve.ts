@@ -813,6 +813,37 @@ route("POST", "/api/demo-request", async (req) => {
 
   console.log(`Demo request from ${submission.name} <${submission.email}>`);
 
+  // Send email notification via Resend
+  const RESEND_KEY = process.env.RESEND_API_KEY;
+  if (RESEND_KEY) {
+    try {
+      await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${RESEND_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: "BehaviorTrack <onboarding@resend.dev>",
+          to: "behavior-track-55884afd@ctomail.io",
+          subject: `New demo request from ${submission.name}`,
+          html: `
+            <h2>New Demo Request</h2>
+            <p><strong>Name:</strong> ${submission.name}</p>
+            <p><strong>Email:</strong> ${submission.email}</p>
+            <p><strong>Role:</strong> ${submission.role || "—"}</p>
+            <p><strong>School:</strong> ${submission.school || "—"}</p>
+            <p><strong>Interest:</strong> ${submission.interest || "—"}</p>
+            <p><strong>Submitted:</strong> ${submission.submittedAt}</p>
+          `,
+        }),
+      });
+      console.log(`Demo request email sent for ${submission.email}`);
+    } catch (emailErr) {
+      console.error("Failed to send demo request email:", emailErr);
+    }
+  }
+
   return json({
     success: true,
     message: "Thank you! We'll be in touch.",
