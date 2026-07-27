@@ -59,7 +59,8 @@ export default function Login() {
         padding: "var(--space-md)",
       }}
     >
-      <div style={{ width: "100%", maxWidth: 440 }}>
+      <a href="#main-content" className="skip-to-content">Skip to content</a>
+      <div id="main-content" tabIndex={-1} style={{ width: "100%", maxWidth: 440 }}>
         <div style={{ textAlign: "center", marginBottom: "var(--space-xl)" }}>
           <h1
             style={{

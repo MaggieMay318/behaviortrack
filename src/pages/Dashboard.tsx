@@ -382,11 +382,8 @@ export default function Dashboard() {
                 </span>
                 <button
                   onClick={() => setDismissedAlerts(prev => new Set(prev).add(i))}
-                  style={{
-                    background: "none", border: "none", cursor: "pointer", fontSize: "1rem",
-                    color: textColor, opacity: 0.6, padding: "0 4px", lineHeight: 1,
-                    display: "flex", alignItems: "center",
-                  }}
+                  className="alert-dismiss"
+                  style={{ color: textColor }}
                   aria-label="Dismiss alert"
                 ><AlertTriangle size={16} /></button>
               </div>

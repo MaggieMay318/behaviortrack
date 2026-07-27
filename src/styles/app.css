@@ -160,6 +160,24 @@ body {
   outline-offset: -4px;
 }
 
+/* ─── Alert Dismiss Button ─────────────────────────── */
+.alert-dismiss {
+  background: none;
+  border: none;
+  cursor: pointer;
+  opacity: 0.6;
+  padding: 0 4px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  transition: opacity 0.15s, background 0.15s;
+  border-radius: var(--radius-sm);
+}
+.alert-dismiss:hover {
+  background: rgba(0,0,0,0.08);
+  opacity: 1;
+}
+
 /* ─── Spinner ──────────────────────────────────────── */
 .spinner {
   display: inline-block;
@@ -225,6 +243,20 @@ a {
 
 a:hover {
   text-decoration: underline;
+}
+
+a:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-md);
+}
+a:focus-visible .card,
+a:focus-visible .stat-card,
+a:focus-visible .goal-card,
+a:focus-visible .top-earner-item {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+  border-radius: var(--radius-md);
 }
 
 /* ─── Page fade-in with slide ─────────────────────── */
@@ -330,7 +362,7 @@ a:hover {
   background: none;
   color: var(--color-gray-500);
   cursor: pointer;
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   font-weight: 500;
   text-decoration: none;
   border-radius: var(--radius-sm);
@@ -670,7 +702,7 @@ a:hover {
   display: inline-flex;
   align-items: center;
   padding: 3px var(--space-sm);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 600;
   border-radius: var(--radius-full);
   line-height: 1.5;
@@ -823,7 +855,7 @@ a:hover {
 }
 
 .fab-add:hover {
-  transform: scale(1.1) rotate(5deg);
+  transform: scale(1.05);
   box-shadow: 0 8px 32px rgba(249, 115, 22, 0.55);
 }
 
@@ -1309,7 +1341,7 @@ a:hover {
 }
 
 .stat-card__label {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 500;
   color: var(--color-gray-500);
   text-transform: uppercase;
@@ -1318,7 +1350,7 @@ a:hover {
 }
 
 .stat-card__sub {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   color: var(--color-gray-500);
   margin-top: 2px;
 }
@@ -1725,7 +1757,7 @@ a:hover {
 
 .goal-card__student-info { flex: 1; min-width: 0; }
 .goal-card__student-name { font-weight: 600; font-size: 0.9rem; color: var(--color-gray-800); }
-.goal-card__student-meta { font-size: 0.75rem; color: var(--color-gray-500); }
+.goal-card__student-meta { font-size: 0.8rem; color: var(--color-gray-500); }
 .goal-card__title { font-weight: 600; font-size: 0.925rem; color: var(--color-gray-900); line-height: 1.3; }
 .goal-card__behavior { font-size: 0.8rem; color: var(--color-gray-600); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
@@ -1745,9 +1777,9 @@ a:hover {
   transition: width 0.5s ease-out;
 }
 
-.goal-card__progress-label { font-size: 0.7rem; color: var(--color-gray-500); white-space: nowrap; }
+.goal-card__progress-label { font-size: 0.75rem; color: var(--color-gray-500); white-space: nowrap; }
 
-.goal-card__dates { display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: var(--color-gray-500); }
+.goal-card__dates { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--color-gray-500); }
 .goal-card__review { font-weight: 600; }
 .goal-card__review--overdue { color: var(--color-danger); }
 
@@ -1777,7 +1809,7 @@ a:hover {
 
 .goal-field { display: flex; flex-direction: column; gap: 2px; }
 .goal-field__label {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -2285,14 +2317,14 @@ a:hover {
 }
 
 .dashboard-preview__stat-label {
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--color-gray-500);
 }
 
-.dashboard-preview__stat-sub { font-size: 0.6rem; color: var(--color-gray-400); }
+.dashboard-preview__stat-sub { font-size: 0.75rem; color: var(--color-gray-400); }
 
 .dashboard-preview__chart { padding: var(--space-md); background: var(--color-white); }
 
@@ -2311,7 +2343,7 @@ a:hover {
 
 .dashboard-preview__bar-label {
   width: 80px;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   color: var(--color-gray-600);
   text-align: right;
   flex-shrink: 0;
@@ -2331,7 +2363,7 @@ a:hover {
   transition: width 0.6s ease-out;
 }
 
-.dashboard-preview__bar-val { width: 24px; font-size: 0.7rem; font-weight: 600; color: var(--color-gray-600); flex-shrink: 0; }
+.dashboard-preview__bar-val { width: 24px; font-size: 0.75rem; font-weight: 600; color: var(--color-gray-600); flex-shrink: 0; }
 
 .dashboard-preview__footer {
   padding: var(--space-sm) var(--space-md);
@@ -2924,7 +2956,7 @@ a:hover {
 }
 
 .top-earner-item__points-label {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 500;
   color: var(--color-gray-500);
   text-transform: uppercase;
@@ -2940,4 +2972,27 @@ a:hover {
   background: radial-gradient(circle, var(--color-primary-light) 0%, transparent 70%);
   opacity: 0.08;
   pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════════════════
+   Filter Row — mobile stacking
+   ═══════════════════════════════════════════════════════ */
+@media (max-width: 400px) {
+  .filter-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   Reduced Motion — respect user preference
+   ═══════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .points-sparkle, .points-confetti { display: none; }
 }

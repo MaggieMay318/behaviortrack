@@ -427,7 +427,7 @@ export default function StudentProfile() {
       )}
 
       <h2 className="mb-sm">Behavior Timeline</h2>
-      <div className="flex gap-sm mb-md" style={{ flexWrap: "wrap", alignItems: "flex-end" }}>
+      <div className="flex gap-sm mb-md filter-row" style={{ flexWrap: "wrap", alignItems: "flex-end" }}>
         <div style={{ minWidth: 120 }}><label className="form-label" style={{ fontSize: "0.75rem" }}>Entry Type</label>
           <select className="form-select" value={filterType} onChange={e => setFilterType(e.target.value)} style={{ minHeight: 36, fontSize: "0.85rem", padding: "2px 8px" }}>
             <option value="">All</option><option value="positive">Positive</option><option value="minor_concern">Minor Concern</option><option value="moderate_concern">Moderate Concern</option><option value="major_concern">Major Concern</option><option value="crisis">Crisis</option>
