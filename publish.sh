@@ -16,6 +16,16 @@ mkdir -p .run
 # once node_modules is current.
 bun install
 bun run build
+
+# Create a sentinel so the platform's start script knows to run our server
+# (not the "coming soon" placeholder) after sandbox restarts.
+mkdir -p dist/server
+cat > dist/server/server.js << 'SERVEREOF'
+// Sentry file: the platform checks for dist/server/server.js to determine
+// this is a custom site. On restart, it runs "bun run start" from here.
+import("../serve.ts");
+SERVEREOF
+
 setsid nohup bun run start > .run/server.log 2>&1 < /dev/null &
 
 # Wait for the new server to actually answer before reporting success, so a

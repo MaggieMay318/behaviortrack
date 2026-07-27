@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { SignedIn, SignedOut } from "@clerk/clerk-react";
+import { SignedIn, SignedOut, useAuth } from "@clerk/clerk-react";
 import Layout from "./components/Layout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -42,30 +42,29 @@ function HomeRoute() {
   );
 }
 
+function ProtectedLayout() {
+  const { isLoaded, isSignedIn } = useAuth();
+
+  // Show spinner while Clerk verifies the session
+  if (!isLoaded) {
+    return <PageFallback />;
+  }
+
+  // If Clerk confirms user is signed out, redirect to /login
+  if (!isSignedIn) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // All good — render the app layout with nested routes
+  return <Layout />;
+}
+
 export default function App() {
   return (
     <Routes>
-      {/* Public: landing page for signed-out visitors, redirect to dashboard for signed-in */}
       <Route path="/" element={<HomeRoute />} />
-
-      {/* Public: login page — only accessible when signed out */}
-      <Route
-        path="/login"
-        element={
-          <SignedOut>
-            <Login />
-          </SignedOut>
-        }
-      />
-
-      {/* Protected: all app routes require sign-in */}
-      <Route
-        element={
-          <SignedIn>
-            <Layout />
-          </SignedIn>
-        }
-      >
+      <Route path="/login" element={<Login />} />
+      <Route element={<ProtectedLayout />}>
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="entry" element={<EntryForm />} />
         <Route path="entry/:id" element={<EntryForm />} />
@@ -80,9 +79,7 @@ export default function App() {
         <Route path="settings" element={<Settings />} />
         <Route path="help" element={<Help />} />
       </Route>
-
-      {/* Catch-all: redirect to home */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      {/* No catch-all — if no route matches, React Router renders nothing (we show spinner via ProtectedLayout) */}
     </Routes>
   );
 }

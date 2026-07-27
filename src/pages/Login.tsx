@@ -1,8 +1,32 @@
-import { SignIn, useAuth } from "@clerk/clerk-react";
-import { Navigate } from "react-router-dom";
+import { SignIn, SignUp, useAuth } from "@clerk/clerk-react";
+import { Navigate, useSearchParams } from "react-router-dom";
+
+const appearance = {
+  elements: {
+    formButtonPrimary:
+      "background-color: var(--color-primary); border-color: var(--color-primary);",
+    formButtonPrimaryHover:
+      "background-color: var(--color-primary-dark); border-color: var(--color-primary-dark);",
+    card: "box-shadow: none; border: 1px solid var(--color-gray-200); border-radius: var(--radius-md);",
+    headerTitle: "color: var(--color-gray-900);",
+    headerSubtitle: "color: var(--color-gray-500);",
+    socialButtonsBlockButton:
+      "border: 1px solid var(--color-gray-200); border-radius: var(--radius-sm);",
+    formFieldLabel: "color: var(--color-gray-700); font-weight: 600;",
+    formFieldInput:
+      "border: 1px solid var(--color-gray-300); border-radius: var(--radius-sm); min-height: var(--touch-min);",
+    formFieldInputFocus:
+      "border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(30,90,138,0.15);",
+    footerActionLink: "color: var(--color-primary);",
+    dividerLine: "background-color: var(--color-gray-200);",
+    dividerText: "color: var(--color-gray-400);",
+  },
+};
 
 export default function Login() {
   const { isSignedIn } = useAuth();
+  const [searchParams] = useSearchParams();
+  const isSignUp = searchParams.get("sign_up") === "true";
 
   if (isSignedIn) {
     return <Navigate to="/dashboard" replace />;
@@ -33,32 +57,23 @@ export default function Login() {
           <p className="text-muted">Classroom behavior tracking for K–8 educators</p>
         </div>
 
-        <SignIn
-          routing="path"
-          path="/login"
-          signUpUrl="/login?sign_up=true"
-          appearance={{
-            elements: {
-              formButtonPrimary:
-                "background-color: var(--color-primary); border-color: var(--color-primary);",
-              formButtonPrimaryHover:
-                "background-color: var(--color-primary-dark); border-color: var(--color-primary-dark);",
-              card: "box-shadow: none; border: 1px solid var(--color-gray-200); border-radius: var(--radius-md);",
-              headerTitle: "color: var(--color-gray-900);",
-              headerSubtitle: "color: var(--color-gray-500);",
-              socialButtonsBlockButton:
-                "border: 1px solid var(--color-gray-200); border-radius: var(--radius-sm);",
-              formFieldLabel: "color: var(--color-gray-700); font-weight: 600;",
-              formFieldInput:
-                "border: 1px solid var(--color-gray-300); border-radius: var(--radius-sm); min-height: var(--touch-min);",
-              formFieldInputFocus:
-                "border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(30,90,138,0.15);",
-              footerActionLink: "color: var(--color-primary);",
-              dividerLine: "background-color: var(--color-gray-200);",
-              dividerText: "color: var(--color-gray-400);",
-            },
-          }}
-        />
+        {isSignUp ? (
+          <SignUp
+            routing="path"
+            path="/login"
+            signInUrl="/login"
+            redirectUrl="/dashboard"
+            appearance={appearance}
+          />
+        ) : (
+          <SignIn
+            routing="path"
+            path="/login"
+            signUpUrl="/login?sign_up=true"
+            redirectUrl="/dashboard"
+            appearance={appearance}
+          />
+        )}
 
         {/* Demo disclaimer — only shown in demo mode */}
         {import.meta.env.VITE_DEMO_MODE === "true" && (
