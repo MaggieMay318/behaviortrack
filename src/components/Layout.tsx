@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { useUser, UserButton } from "@clerk/clerk-react";
 import { useLegacyToken } from "../lib/auth";
@@ -14,6 +15,8 @@ import {
   Sparkles,
   HelpCircle,
   Plus,
+  MoreHorizontal,
+  X,
 } from "lucide-react";
 
 const iconSize = 20;
@@ -27,18 +30,41 @@ const navItems = [
   { path: "/settings", icon: <Settings size={iconSize} />, label: "Settings" },
 ];
 
-const sideNavItems = [
-  ...navItems,
+const moreItems = [
   { path: "/goals", icon: <Target size={iconSize} />, label: "Goals" },
   { path: "/trends", icon: <TrendingUp size={iconSize} />, label: "Trends" },
   { path: "/assistant", icon: <Sparkles size={iconSize} />, label: "Assistant" },
   { path: "/help", icon: <HelpCircle size={iconSize} />, label: "Help" },
 ];
 
+const sideNavItems = [
+  ...navItems,
+  ...moreItems,
+];
+
 export default function Layout() {
   const location = useLocation();
   const { user: clerkUser } = useUser();
   const { loading, error } = useLegacyToken();
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreRef = useRef<HTMLDivElement>(null);
+
+  // Close the More menu when clicking outside or navigating
+  useEffect(() => {
+    setMoreOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
+        setMoreOpen(false);
+      }
+    }
+    if (moreOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [moreOpen]);
 
   if (loading) {
     return (
@@ -155,7 +181,7 @@ export default function Layout() {
         </main>
 
         {/* Bottom navigation (mobile) */}
-        <nav className="bottom-nav" role="navigation" aria-label="Mobile navigation">
+        <nav className="bottom-nav" role="navigation" aria-label="Mobile navigation" ref={moreRef}>
           {navItems.map((item) => {
             const isActive =
               location.pathname === item.path ||
@@ -176,13 +202,48 @@ export default function Layout() {
               </Link>
             );
           })}
+          {/* More menu toggle */}
+          <button
+            className={`bottom-nav__item${moreOpen ? " bottom-nav__item--active" : ""}`}
+            onClick={() => setMoreOpen(!moreOpen)}
+            aria-label="More navigation options"
+            aria-expanded={moreOpen}
+          >
+            <span className="bottom-nav__icon" aria-hidden="true">
+              {moreOpen ? <X size={20} /> : <MoreHorizontal size={20} />}
+            </span>
+            <span>More</span>
+          </button>
+
+          {/* More submenu */}
+          {moreOpen && (
+            <div className="bottom-nav__more-menu">
+              {moreItems.map((item) => {
+                const isActive =
+                  location.pathname === item.path ||
+                  (item.path !== "/" && location.pathname.startsWith(item.path + "/"));
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`bottom-nav__more-item${isActive ? " bottom-nav__more-item--active" : ""}`}
+                    aria-current={isActive ? "page" : undefined}
+                    onClick={() => setMoreOpen(false)}
+                  >
+                    <span aria-hidden="true" style={{ display: "flex", alignItems: "center" }}>{item.icon}</span>
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </nav>
 
-        {/* FAB - Quick Entry */}
+        {/* FAB - Quick Entry (desktop only; mobile uses bottom nav) */}
         {location.pathname !== "/entry" && (
           <Link
             to="/entry"
-            className="fab-add"
+            className="fab-add hide-mobile"
             title="Add Behavior Entry"
             aria-label="Add Behavior Entry"
           >

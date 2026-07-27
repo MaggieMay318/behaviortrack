@@ -24,9 +24,25 @@ const appearance = {
 };
 
 export default function Login() {
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, isLoaded } = useAuth();
   const [searchParams] = useSearchParams();
   const isSignUp = searchParams.get("sign_up") === "true";
+
+  if (!isLoaded) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "100dvh",
+          background: "var(--color-gray-50)",
+        }}
+      >
+        <div className="spinner spinner--lg" />
+      </div>
+    );
+  }
 
   if (isSignedIn) {
     return <Navigate to="/dashboard" replace />;

@@ -329,14 +329,16 @@ export default function StudentProfile() {
   const { legacyToken: token } = useLegacyToken();
 
   useEffect(() => {
+    if (!token) return;
     fetch(`/api/students/${id}`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json()).then(data => { setStudent(data.student); setStats(data.stats); setGoals(data.goals || []); setLoading(false); })
       .catch(() => setLoading(false));
-  }, [id]);
+  }, [id, token]);
   useEffect(() => {
+    if (!token) return;
     fetch(`/api/entries/stats?student_id=${id}`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json()).then(data => setEntryStats(data)).catch(() => {});
-  }, [id]);
+  }, [id, token]);
   const fetchEntries = useCallback((reset: boolean) => {
     const offset = reset ? 0 : entryOffset;
     let url = `/api/entries?student_id=${id}&limit=${LIMIT}&offset=${offset}`;
@@ -364,7 +366,24 @@ export default function StudentProfile() {
       <div className="card">
         <div className="flex items-start gap-md" style={{ flexWrap: "wrap" }}>
           <div className="student-profile__avatar" style={{ background: "var(--color-primary-bg)" }}>
-            <img src={getAvatarUrl(student.initials)} alt="" />
+            <img
+              src={getAvatarUrl(student.initials)}
+              alt=""
+              onError={(e) => {
+                const el = e.currentTarget;
+                el.style.display = "none";
+                const parent = el.parentElement;
+                if (parent) {
+                  parent.textContent = student.initials;
+                  parent.style.display = "flex";
+                  parent.style.alignItems = "center";
+                  parent.style.justifyContent = "center";
+                  parent.style.fontWeight = "700";
+                  parent.style.fontSize = "1.2rem";
+                  parent.style.color = "var(--color-primary)";
+                }
+              }}
+            />
           </div>
           <div style={{ flex: 1, minWidth: 200 }}>
             <div className="flex items-center gap-sm" style={{ flexWrap: "wrap" }}>

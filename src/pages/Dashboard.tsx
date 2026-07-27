@@ -475,7 +475,7 @@ export default function Dashboard() {
                 {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i + 1}`}
               </span>
               <span className="top-earner-item__avatar">
-                <img src={getAvatarUrl(earner.initials)} alt="" />
+                <img src={getAvatarUrl(earner.initials)} alt="" onError={(e) => { const el = e.currentTarget; el.style.display = "none"; const p = el.parentElement; if (p) { p.textContent = earner.initials; p.style.display = "flex"; p.style.alignItems = "center"; p.style.justifyContent = "center"; p.style.fontWeight = "700"; p.style.color = "var(--color-primary)"; } }} />
               </span>
               <div className="top-earner-item__info">
                 <div className="top-earner-item__name">{earner.display_name}</div>
@@ -515,7 +515,7 @@ export default function Dashboard() {
                 <div className="card__header">
                   <div className="flex items-center gap-sm">
                     <span className="student-avatar">
-                      <img src={getAvatarUrl(entry.student_initials)} alt="" />
+                      <img src={getAvatarUrl(entry.student_initials)} alt="" onError={(e) => { const el = e.currentTarget; el.style.display = "none"; const p = el.parentElement; if (p) { p.textContent = entry.student_initials; p.style.display = "flex"; p.style.alignItems = "center"; p.style.justifyContent = "center"; p.style.fontWeight = "700"; p.style.color = "var(--color-primary)"; } }} />
                     </span>
                     <div>
                       <div style={{ fontWeight: 600, fontSize: "0.925rem" }}>{entry.student_name}</div>

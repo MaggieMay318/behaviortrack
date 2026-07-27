@@ -590,6 +590,30 @@ export default function Assistant() {
         generated text before using it in an official record.
       </p>
 
+      {/* Welcome banner — shown when no tools have been used yet */}
+      {!t1Output && !t2Output && t3Observed.length === 0 && t3Assumptions.length === 0 && !t4Output && !t5Output && (
+        <div className="alert alert--info mb-lg" style={{ display: "flex", gap: "var(--space-md)", alignItems: "flex-start" }}>
+          <span style={{ fontSize: "1.5rem", flexShrink: 0 }}>👋</span>
+          <div>
+            <strong style={{ display: "block", marginBottom: "var(--space-xs)" }}>Welcome to the Writing Assistant</strong>
+            <p className="text-sm" style={{ margin: 0, lineHeight: 1.6 }}>
+              This page helps you write objective, professional documentation for student behavior records.
+              Choose a tool below to get started:
+            </p>
+            <ul className="text-sm" style={{ margin: "var(--space-sm) 0 0 var(--space-md)", lineHeight: 1.8, color: "var(--color-gray-600)" }}>
+              <li><strong>Rewrite Objectively</strong> — remove labels and judgmental language</li>
+              <li><strong>Remove Emotional Language</strong> — strip extreme words while keeping facts</li>
+              <li><strong>Separate Observations</strong> — split facts from assumptions</li>
+              <li><strong>Parent Contact Note</strong> — generate professional parent communications</li>
+              <li><strong>Meeting Summary</strong> — structure notes into meeting-ready summaries</li>
+            </ul>
+            <p className="text-sm text-muted" style={{ marginTop: "var(--space-sm)", marginBottom: 0 }}>
+              All processing is done locally in your browser. No data is sent to external servers.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* ─── Tool 1: Rewrite Notes Objectively ────────── */}
       <ToolCard
         id="tool-rewrite"

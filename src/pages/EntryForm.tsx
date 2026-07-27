@@ -808,7 +808,7 @@ export default function EntryForm() {
                           onClick={() => selectStudent(s)}
                         >
                           <span className="student-avatar">
-                            <img src={getAvatarUrl(s.initials)} alt="" />
+                            <img src={getAvatarUrl(s.initials)} alt="" onError={(e) => { const el = e.currentTarget; el.style.display = "none"; const p = el.parentElement; if (p) { p.textContent = s.initials; p.style.display = "flex"; p.style.alignItems = "center"; p.style.justifyContent = "center"; p.style.fontWeight = "700"; p.style.color = "var(--color-primary)"; } }} />
                           </span>
                           <span className="student-info">
                             <strong>{s.display_name}</strong>
@@ -826,7 +826,7 @@ export default function EntryForm() {
               <div className="student-card">
                 <div className="flex items-center gap-md">
                   <span className="student-avatar student-avatar--lg">
-                    <img src={getAvatarUrl(selectedStudent.initials)} alt="" />
+                    <img src={getAvatarUrl(selectedStudent.initials)} alt="" onError={(e) => { const el = e.currentTarget; el.style.display = "none"; const p = el.parentElement; if (p) { p.textContent = selectedStudent.initials; p.style.display = "flex"; p.style.alignItems = "center"; p.style.justifyContent = "center"; p.style.fontWeight = "700"; p.style.color = "var(--color-primary)"; } }} />
                   </span>
                   <div>
                     <strong style={{ fontSize: "1.05rem" }}>{selectedStudent.display_name}</strong>

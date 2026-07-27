@@ -69,7 +69,6 @@ function AddStudentModal({
     setSubmitting(true);
     setError("");
     try {
-      const token = localStorage.getItem("bt_token");
       const res = await fetch("/api/students", {
         method: "POST",
         headers: {
@@ -252,7 +251,24 @@ export default function Students() {
                     className="student-list-card__avatar"
                     style={{ background: "var(--color-primary-bg)" }}
                   >
-                    <img src={getAvatarUrl(s.initials)} alt="" />
+                    <img
+                      src={getAvatarUrl(s.initials)}
+                      alt=""
+                      onError={(e) => {
+                        const el = e.currentTarget;
+                        el.style.display = "none";
+                        const parent = el.parentElement;
+                        if (parent) {
+                          parent.textContent = s.initials;
+                          parent.style.display = "flex";
+                          parent.style.alignItems = "center";
+                          parent.style.justifyContent = "center";
+                          parent.style.fontWeight = "700";
+                          parent.style.fontSize = "0.85rem";
+                          parent.style.color = "var(--color-primary)";
+                        }
+                      }}
+                    />
                   </div>
 
                   <div className="student-list-card__info">
