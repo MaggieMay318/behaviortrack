@@ -154,6 +154,11 @@ export default function GoalDetail() {
       <div className="card"><div className="section-header"><h2 style={{ marginBottom: 0 }}>Progress Updates <span className="text-sm text-muted" style={{ marginLeft: "var(--space-sm)", fontWeight: 400 }}>({progress.length} total)</span></h2><button className="btn btn--primary btn--sm" onClick={() => setShowAddProgress(!showAddProgress)}>{showAddProgress ? "Cancel" : "+ Add Update"}</button></div>
         {showAddProgress && (
           <form onSubmit={handleAddProgress} style={{ background: "var(--color-gray-50)", border: "1px solid var(--color-gray-200)", borderRadius: "var(--radius-md)", padding: "var(--space-md)", marginBottom: "var(--space-md)" }}>
+            {mutationError && (
+              <div className="alert alert--error" style={{ marginBottom: "var(--space-md)", fontSize: "0.85rem" }}>
+                {mutationError}
+              </div>
+            )}
             <div className="form-group"><label className="form-label" htmlFor="progress-date">Date</label><input id="progress-date" type="date" className="form-input" value={progressDate} onChange={e => setProgressDate(e.target.value)} required /></div>
             <div className="form-group"><label className="form-label">Rating (1\u20135)</label><div className="rating-dots">{[1, 2, 3, 4, 5].map(r => <button key={r} type="button" className={`rating-dot rating-dot--${r}${progressRating === r ? " rating-dot--selected" : ""}`} onClick={() => setProgressRating(r)} aria-label={`Rating ${r}`} />)}<span className="text-sm text-muted" style={{ marginLeft: "var(--space-sm)" }}>{progressRating === 1 ? "Significant concern" : progressRating === 2 ? "Below target" : progressRating === 3 ? "Making progress" : progressRating === 4 ? "Near target" : "At or above target"}</span></div></div>
             <div className="form-group"><label className="form-label" htmlFor="progress-notes">Notes</label><textarea id="progress-notes" className="form-textarea" value={progressNotes} onChange={e => setProgressNotes(e.target.value)} placeholder="Describe today's progress observation..." rows={3} /></div>

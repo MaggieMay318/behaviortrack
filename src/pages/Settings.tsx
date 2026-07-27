@@ -1,4 +1,5 @@
 import { useUser } from "@clerk/clerk-react";
+import { Link } from "react-router-dom";
 import { useLegacyToken } from "../lib/auth";
 import { User, GraduationCap, ShieldCheck, Database, Settings2, Info, Mail, Tag } from "lucide-react";
 
@@ -89,9 +90,9 @@ export default function Settings() {
           BehaviorTrack stores behavior observation data locally in this {import.meta.env.VITE_DEMO_MODE === "true" ? "demo" : ""} environment.
           {import.meta.env.VITE_DEMO_MODE === "true" && " All student data shown is fictional and for demonstration purposes only."}
         </p>
-        <a href="/help" style={{ fontSize: "0.875rem", color: "var(--color-primary)", display: "inline-flex", alignItems: "center", gap: "var(--space-xs)" }}>
+        <Link to="/help" style={{ fontSize: "0.875rem", color: "var(--color-primary)", display: "inline-flex", alignItems: "center", gap: "var(--space-xs)" }}>
           View Privacy Policy <span style={{ fontSize: "1rem" }}>\u2192</span>
-        </a>
+        </Link>
       </div>
     </div>
   );

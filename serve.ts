@@ -794,8 +794,15 @@ route("POST", "/api/demo-request", async (req) => {
   // Read existing submissions, append new one
   let submissions: typeof submission[] = [];
   try {
-    const existing = await Bun.file(filePath).text();
+    const file = Bun.file(filePath);
+    const existing = await file.text();
     submissions = JSON.parse(existing);
+    // Check file size: if over ~1MB, trim old entries to prevent unbounded growth
+    if (existing.length > 1_000_000) {
+      // Keep only the 200 most recent submissions
+      submissions = submissions.slice(-200);
+      console.log(`demo-requests.json trimmed from ${JSON.parse(existing).length} to ${submissions.length} entries`);
+    }
   } catch {
     // File doesn't exist yet — start fresh
   }

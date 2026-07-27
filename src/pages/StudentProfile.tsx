@@ -343,6 +343,8 @@ export default function StudentProfile() {
     const offset = reset ? 0 : entryOffset;
     let url = `/api/entries?student_id=${id}&limit=${LIMIT}&offset=${offset}`;
     if (filterType) url += `&entry_type=${filterType}`;
+    if (filterDateFrom) url += `&date_from=${filterDateFrom}`;
+    if (filterDateTo) url += `&date_to=${filterDateTo}`;
     setEntryLoading(true);
     fetch(url, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json()).then(data => {
@@ -352,8 +354,8 @@ export default function StudentProfile() {
         setHasMore(newEntries.length === LIMIT);
         setEntryLoading(false);
       }).catch(() => setEntryLoading(false));
-  }, [id, filterType, entryOffset]);
-  useEffect(() => { setEntries([]); setEntryOffset(0); setHasMore(true); fetchEntries(true); }, [id, filterType]);
+  }, [id, filterType, filterDateFrom, filterDateTo, entryOffset]);
+  useEffect(() => { setEntries([]); setEntryOffset(0); setHasMore(true); fetchEntries(true); }, [id, filterType, filterDateFrom, filterDateTo]);
   const handleLoadMore = () => fetchEntries(false);
 
   if (loading) return <div className="loading" aria-busy="true"><span className="spinner spinner--lg" style={{ marginRight: "var(--space-sm)" }} />Loading student profile...</div>;
@@ -432,6 +434,11 @@ export default function StudentProfile() {
           </select></div>
         <div style={{ minWidth: 110 }}><label className="form-label" style={{ fontSize: "0.75rem" }}>From</label><input type="date" className="form-input" value={filterDateFrom} onChange={e => setFilterDateFrom(e.target.value)} style={{ minHeight: 36, fontSize: "0.85rem", padding: "2px 8px" }} /></div>
         <div style={{ minWidth: 110 }}><label className="form-label" style={{ fontSize: "0.75rem" }}>To</label><input type="date" className="form-input" value={filterDateTo} onChange={e => setFilterDateTo(e.target.value)} style={{ minHeight: 36, fontSize: "0.85rem", padding: "2px 8px" }} /></div>
+        {(filterDateFrom || filterDateTo) && (
+          <span className="text-sm" style={{ color: "var(--color-info)", fontStyle: "italic", alignSelf: "flex-end", paddingBottom: "4px" }}>
+            Date filter applied
+          </span>
+        )}
       </div>
 
       {entries.length === 0 ? (

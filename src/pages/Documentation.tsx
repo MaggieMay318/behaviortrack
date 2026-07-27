@@ -756,6 +756,11 @@ export default function Documentation() {
                 </button>
               ))}
             </div>
+            {filters.contactPending && (
+              <p className="text-sm" style={{ color: "var(--color-info)", marginTop: "4px", fontStyle: "italic" }}>
+                Filtered locally after fetch
+              </p>
+            )}
           </div>
 
           {/* Saved filters */}

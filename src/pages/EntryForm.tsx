@@ -241,6 +241,7 @@ function ChipGroup({
 }) {
   const [customOpen, setCustomOpen] = useState(false);
   const [customValue, setCustomValue] = useState("");
+  const [customError, setCustomError] = useState(false);
 
   const toggle = (opt: string) => {
     if (multi) {
@@ -256,7 +257,13 @@ function ChipGroup({
 
   const addCustom = () => {
     const trimmed = customValue.trim();
-    if (trimmed && !selected.includes(trimmed)) {
+    if (!trimmed) {
+      // Trigger shake animation, don't close
+      setCustomError(true);
+      setTimeout(() => setCustomError(false), 500);
+      return;
+    }
+    if (!selected.includes(trimmed)) {
       onChange([...selected, trimmed]);
     }
     setCustomValue("");
@@ -286,7 +293,7 @@ function ChipGroup({
       })}
       {multi && (
         customOpen ? (
-          <span className="chip-custom-input-wrapper">
+          <span className={`chip-custom-input-wrapper${customError ? " chip-custom-input-wrapper--error" : ""}`}>
             <input
               className="chip-custom-input"
               value={customValue}
@@ -353,7 +360,9 @@ function Collapsible({ title, open, onToggle, children }: { title: string; open:
         <span>{title}</span>
         <span className="collapsible__arrow" style={{ transform: open ? "rotate(180deg)" : "rotate(0)" }}>▾</span>
       </button>
-      {open && <div className="collapsible__body">{children}</div>}
+      <div className={`collapsible__body${open ? " collapsible__body--open" : ""}`}>
+        <div className="collapsible__body-inner">{children}</div>
+      </div>
     </div>
   );
 }
