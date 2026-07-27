@@ -200,7 +200,7 @@ function HorizontalBarChart({ data, color }: { data: CategoryEntry[]; color: str
         return (
           <g key={d.name}>
             <text x={0} y={y + barH / 2 + 3} fontSize="10" fill="var(--color-gray-700)">
-              {d.name.length > 18 ? d.name.slice(0, 17) + "\u2026" : d.name}
+              {d.name.length > 14 ? d.name.slice(0, 13) + "\u2026" : d.name}
             </text>
             <rect x={190} y={y} width={bw} height={barH} fill={color} rx="3" opacity="0.85" />
             <text x={190 + bw + 4} y={y + barH / 2 + 3} fontSize="10" fill="var(--color-gray-600)" fontWeight="600">{d.count}</text>

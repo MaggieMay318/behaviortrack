@@ -173,7 +173,7 @@ export default function Students() {
       });
   };
 
-  useEffect(() => { fetchStudents(); }, []);
+  useEffect(() => { fetchStudents(); }, [token]);
 
   const filtered = students.filter((s) => {
     if (!search.trim()) return true;

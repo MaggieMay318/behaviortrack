@@ -73,7 +73,7 @@ const DOC_STATUS_LABELS: Record<string, string> = {
 
 const DOC_STATUS_COLORS: Record<string, string> = {
   not_required: "badge--neutral",
-  required_pending: "badge--moderate",
+  required_pending: "badge--pending",
   completed: "badge--positive",
   needs_clarification: "badge--major",
 };

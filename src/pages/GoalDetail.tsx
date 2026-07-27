@@ -106,13 +106,14 @@ export default function GoalDetail() {
   const [progressDate, setProgressDate] = useState(new Date().toISOString().slice(0, 10));
   const [progressRating, setProgressRating] = useState(3); const [progressNotes, setProgressNotes] = useState("");
   const [savingProgress, setSavingProgress] = useState(false);
+  const [mutationError, setMutationError] = useState("");
 
   const fetchGoal = () => { if (!id) return; fetch(`/api/goals/${id}`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()).then(data => { if (data.error) { setError(data.error); setLoading(false); return; } setGoal(data.goal); setProgress(data.progress || []); setLoading(false); }).catch(() => { setError("Failed to load goal"); setLoading(false); }); };
   useEffect(() => { fetchGoal(); }, [id, token]);
 
-  const handleStatusChange = async (newStatus: string) => { if (!goal || !token) return; setUpdatingStatus(true); try { const r = await fetch(`/api/goals/${goal.id}`, { method: "PUT", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ status: newStatus }) }); if (r.ok) { const data = await r.json(); setGoal(data.goal); } } catch {} setUpdatingStatus(false); };
-  const handleAddProgress = async (e: React.FormEvent) => { e.preventDefault(); if (!goal || !token) return; setSavingProgress(true); try { const r = await fetch(`/api/goals/${goal.id}/progress`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ date: progressDate, rating: progressRating, notes: progressNotes }) }); if (r.ok) { const data = await r.json(); setProgress(data.progress); setShowAddProgress(false); setProgressNotes(""); setProgressRating(3); setProgressDate(new Date().toISOString().slice(0, 10)); } } catch {} setSavingProgress(false); };
-  const handleDelete = async () => { if (!goal || !token) return; try { const r = await fetch(`/api/goals/${goal.id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } }); if (r.ok) navigate("/goals"); } catch {} };
+  const handleStatusChange = async (newStatus: string) => { if (!goal || !token) return; setUpdatingStatus(true); setMutationError(""); try { const r = await fetch(`/api/goals/${goal.id}`, { method: "PUT", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ status: newStatus }) }); if (r.ok) { const data = await r.json(); setGoal(data.goal); } else { const d = await r.json(); setMutationError(d.error || "Failed to update status"); } } catch { setMutationError("Network error — please try again"); } setUpdatingStatus(false); };
+  const handleAddProgress = async (e: React.FormEvent) => { e.preventDefault(); if (!goal || !token) return; setSavingProgress(true); setMutationError(""); try { const r = await fetch(`/api/goals/${goal.id}/progress`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ date: progressDate, rating: progressRating, notes: progressNotes }) }); if (r.ok) { const data = await r.json(); setProgress(data.progress); setShowAddProgress(false); setProgressNotes(""); setProgressRating(3); setProgressDate(new Date().toISOString().slice(0, 10)); } else { const d = await r.json(); setMutationError(d.error || "Failed to add progress"); } } catch { setMutationError("Network error — please try again"); } setSavingProgress(false); };
+  const handleDelete = async () => { if (!goal || !token) return; setMutationError(""); try { const r = await fetch(`/api/goals/${goal.id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } }); if (r.ok) navigate("/goals"); else { const d = await r.json(); setMutationError(d.error || "Failed to delete goal"); } } catch { setMutationError("Network error — please try again"); } };
 
   if (loading) return <div className="loading" aria-busy="true"><span className="spinner spinner--lg" style={{ marginRight: "var(--space-sm)" }} />Loading goal details...</div>;
   if (error || !goal) return <div className="empty-state"><span className="empty-state__icon"><AlertTriangle size={40} /></span><p>{error || "Goal not found"}</p><Link to="/goals" className="btn btn--primary btn--sm mt-md">Back to Goals</Link></div>;
@@ -126,6 +127,7 @@ export default function GoalDetail() {
   return (
     <div className="goal-detail">
       <Link to="/goals" className="text-sm" style={{ color: "var(--color-gray-500)" }}>\u2190 Back to Goals</Link>
+      {mutationError && <div className="alert alert--error" style={{ marginTop: "var(--space-sm)", marginBottom: "var(--space-md)" }}>{mutationError}</div>}
       <div className="card">
         <div className="goal-overview__header">
           <div className="flex items-center gap-md"><div className="goal-card__avatar" style={{ width: 48, height: 48, fontSize: "1rem" }}>{goal.student_initials}</div><div><Link to={`/students/${goal.student_id}`} className="card__title" style={{ fontSize: "1.1rem" }}>{goal.student_name}</Link><div className="text-sm text-muted">Grade {goal.student_grade}</div></div></div>

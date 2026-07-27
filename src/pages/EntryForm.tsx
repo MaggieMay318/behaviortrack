@@ -4,39 +4,6 @@ import { useLegacyToken } from "../lib/auth";
 import { CheckCircle, AlertTriangle } from "lucide-react";
 import { getAvatarUrl } from "../lib/avatars";
 
-// ─── Inline Critical Styles (build workaround) ──────────────────────
-
-const ENTRY_FORM_STYLES = `
-.chip-group{display:flex;flex-wrap:wrap;gap:8px}
-.chip{display:inline-flex;align-items:center;padding:8px 16px;font-size:.85rem;font-weight:500;font-family:var(--font-sans);border:1px solid var(--color-gray-200);border-radius:9999px;background:var(--color-white);color:var(--color-gray-700);cursor:pointer;min-height:40px;transition:background .15s,border-color .15s,color .15s;white-space:nowrap;user-select:none}
-.chip:hover{background:var(--color-gray-100);border-color:var(--color-gray-300)}
-.chip--selected{background:var(--color-primary-bg);border-color:var(--color-primary-light);color:var(--color-primary-dark);font-weight:600}
-.chip--custom{border-style:dashed;color:var(--color-gray-400)}
-.chip--custom:hover{color:var(--color-primary);border-color:var(--color-primary-light)}
-.chip-custom-input-wrapper{display:inline-flex;align-items:center;gap:0}
-.chip-custom-input{width:110px;padding:8px 16px;font-size:.85rem;font-family:var(--font-sans);border:1px dashed var(--color-gray-300);border-radius:9999px 0 0 9999px;background:var(--color-white);color:var(--color-gray-800);min-height:40px;outline:none}
-.chip-custom-input:focus{border-color:var(--color-primary)}
-.chip-custom-ok{display:inline-flex;align-items:center;justify-content:center;padding:8px 16px;background:var(--color-primary);color:var(--color-white);border:1px solid var(--color-primary);border-radius:0 9999px 9999px 0;min-height:40px;cursor:pointer;font-weight:700;font-size:.85rem}
-.type-chip-group{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
-.type-chip{display:flex;align-items:center;justify-content:center;padding:16px 8px;font-size:.9rem;font-weight:500;font-family:var(--font-sans);border:2px solid var(--color-gray-200);border-radius:8px;background:var(--color-white);color:var(--color-gray-700);cursor:pointer;min-height:52px;transition:background .15s,border-color .15s,color .15s,transform .1s;text-align:center;line-height:1.2;user-select:none}
-.type-chip:hover{border-color:var(--color-gray-300);transform:translateY(-1px)}
-.type-chip--selected{border-width:2px}
-.student-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--color-white);border:1px solid var(--color-gray-200);border-radius:8px;box-shadow:var(--shadow-lg);max-height:300px;overflow-y:auto;z-index:200;margin-top:4px}
-.student-dropdown__item{display:flex;align-items:center;gap:16px;width:100%;padding:8px 16px;border:none;background:none;cursor:pointer;font-family:var(--font-sans);text-align:left;min-height:44px;transition:background .1s}
-.student-dropdown__item:hover{background:var(--color-gray-50)}
-.student-dropdown__item:not(:last-child){border-bottom:1px solid var(--color-gray-100)}
-.student-dropdown__empty{padding:16px;color:var(--color-gray-400);text-align:center}
-.student-card{background:var(--color-gray-50);border:1px solid var(--color-gray-200);border-radius:8px;padding:16px}
-.student-avatar{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:9999px;background:var(--color-primary-bg);color:var(--color-primary-dark);font-weight:700;font-size:.85rem;flex-shrink:0}
-.student-avatar--lg{width:48px;height:48px;font-size:1rem}
-.student-info{display:flex;flex-direction:column;gap:2px}
-.collapsible{margin-bottom:16px}
-.collapsible__header{display:flex;align-items:center;justify-content:space-between;width:100%;padding:16px;background:var(--color-white);border:1px solid var(--color-gray-200);border-radius:8px;font-size:1rem;font-weight:600;font-family:var(--font-sans);color:var(--color-gray-800);cursor:pointer;min-height:44px;transition:background .15s}
-.collapsible__header:hover{background:var(--color-gray-50)}
-.collapsible__arrow{font-size:1.2rem;transition:transform .2s;color:var(--color-gray-400)}
-.collapsible__body{padding:16px;border:1px solid var(--color-gray-200);border-top:none;border-radius:0 0 8px 8px;background:var(--color-white)}
-`;
-
 // ─── TypeScript Types ───────────────────────────────────────────────
 
 interface Student {
@@ -769,7 +736,6 @@ export default function EntryForm() {
 
   return (
     <div>
-      <style dangerouslySetInnerHTML={{ __html: ENTRY_FORM_STYLES }} />
       <h1 className="mb-sm">{isEditing ? "Edit Entry" : "Quick Entry"}</h1>
       <p className="text-sm text-muted mb-md">
         Record a behavior observation in under 30 seconds. Use neutral, objective language.
@@ -859,7 +825,7 @@ export default function EntryForm() {
         {/* ── 2. Incident Basics ──────────────────────────────── */}
         <section className="card">
           <h2 className="card__title mb-sm">2. Incident Basics</h2>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-md)" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "var(--space-md)" }}>
             <div className="form-group">
               <label className="form-label" htmlFor="date">Date</label>
               <input id="date" className="form-input" type="date" value={form.date} onChange={(e) => updateForm({ date: e.target.value })} required />

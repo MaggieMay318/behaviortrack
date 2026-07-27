@@ -897,13 +897,25 @@ export default function Reports() {
       const entriesData = await entriesRes.json();
       const entries: Entry[] = entriesData.entries || [];
 
-      // Fetch stats (per-student)
+      // Fetch stats (per-student or classroom-wide)
       let stats: StatData | null = null;
       if (needsStudent && studentId) {
         const statsRes = await fetch(`/api/entries/stats?student_id=${studentId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         stats = await statsRes.json();
+      } else if (!needsStudent) {
+        // Classroom-wide: use trends stats
+        try {
+          const trendParams = new URLSearchParams({ date_from: from, date_to: to });
+          const trendsRes = await fetch(`/api/trends/stats?${trendParams}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const trendsData = await trendsRes.json();
+          if (trendsData && !trendsData.error) {
+            stats = trendsData;
+          }
+        } catch { /* stats are optional */ }
       }
 
       // Fetch goals (per-student only, for goals section)

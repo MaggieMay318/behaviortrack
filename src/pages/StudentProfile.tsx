@@ -158,7 +158,7 @@ function HorizontalBarChart({ data, color }: { data: ChartCategory[]; color: str
         const bw = Math.max((d.count / maxVal) * 180, 4);
         return (
           <g key={d.name}>
-            <text x={0} y={y + barH / 2 + 3} fontSize="10" fill="var(--color-gray-700)">{d.name.length > 18 ? d.name.slice(0, 17) + "\u2026" : d.name}</text>
+            <text x={0} y={y + barH / 2 + 3} fontSize="9" fill="var(--color-gray-700)">{d.name.length > 14 ? d.name.slice(0, 13) + "\u2026" : d.name}</text>
             <rect x={190} y={y} width={bw} height={barH} fill={color} rx="3" opacity="0.85" />
             <text x={190 + bw + 4} y={y + barH / 2 + 3} fontSize="10" fill="var(--color-gray-600)" fontWeight="600">{d.count}</text>
           </g>
@@ -483,7 +483,7 @@ export default function StudentProfile() {
               </div>
             );
           })}
-          {hasMore && <div className="text-center mt-md mb-md"><button className="btn btn--ghost" onClick={handleLoadMore} disabled={entryLoading}>{entryLoading ? "Loading..." : "Load More"}</button></div>}
+          {hasMore && <div className="text-center mt-md mb-md"><button className="btn btn--ghost" onClick={handleLoadMore} disabled={entryLoading}>{entryLoading ? <><span className="spinner spinner--sm" style={{ marginRight: "var(--space-sm)" }} /> Loading...</> : "Load More"}</button></div>}
         </>
       )}
 
