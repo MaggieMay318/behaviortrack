@@ -205,6 +205,66 @@ route("POST", "/api/students", async (req) => {
   return json({ student }, 201);
 });
 
+// Bulk add students
+route("POST", "/api/students/bulk", async (req) => {
+  requireAuth(req);
+  const body = await parseBody(req);
+  const { students: studentList, grade, classroom } = body as {
+    students?: { display_name: string; initials: string; local_id?: string }[];
+    grade?: string;
+    classroom?: string;
+  };
+
+  if (!studentList || !Array.isArray(studentList) || studentList.length === 0) {
+    return json({ error: "students array is required and must not be empty" }, 400);
+  }
+
+  if (studentList.length > 50) {
+    return json({ error: "Maximum 50 students can be added at once" }, 400);
+  }
+
+  const db = getDb();
+  const results: { display_name: string; success: boolean; id?: number; error?: string }[] = [];
+
+  // Use a transaction for atomicity
+  const insert = db.prepare(
+    "INSERT INTO students (display_name, initials, local_id, grade, classroom) VALUES (?, ?, ?, ?, ?)"
+  );
+
+  const insertAll = db.transaction(() => {
+    for (const s of studentList) {
+      const dn = (s.display_name || "").trim();
+      const init = (s.initials || "").trim().toUpperCase();
+      const lid = (s.local_id || "").trim();
+      const gd = (grade || "").trim();
+      const cl = (classroom || "").trim();
+
+      if (!dn) {
+        results.push({ display_name: s.display_name || "(empty)", success: false, error: "Name is required" });
+        continue;
+      }
+      if (!init) {
+        results.push({ display_name: dn, success: false, error: "Initials could not be derived" });
+        continue;
+      }
+
+      try {
+        const result = insert.run(dn, init, lid, gd, cl);
+        results.push({ display_name: dn, success: true, id: Number(result.lastInsertRowid) });
+      } catch (err: any) {
+        results.push({ display_name: dn, success: false, error: err.message || "Database error" });
+      }
+    }
+  });
+
+  insertAll();
+
+  const succeeded = results.filter(r => r.success).length;
+  const failed = results.filter(r => !r.success).length;
+
+  return json({ results, summary: { total: results.length, succeeded, failed } }, 201);
+});
+
 route("GET", "/api/students/:id", (req, params) => {
   requireAuth(req);
   const db = getDb();
