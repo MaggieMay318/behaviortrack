@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useLegacyToken } from "../lib/auth";
-import { Users, Search, Target, FileText, ClipboardList, ChevronRight, X, Plus } from "lucide-react";
+import { Users, Search, Target, FileText, ClipboardList, ChevronRight, X, Plus, Upload, AlertCircle, CheckCircle2 } from "lucide-react";
 import { getAvatarUrl } from "../lib/avatars";
 
 /* ── Types ─────────────────────────────────────────── */
@@ -146,6 +146,274 @@ function AddStudentModal({
   );
 }
 
+/* ── Helpers for bulk parsing ───────────────────────── */
+interface ParsedStudent {
+  display_name: string;
+  initials: string;
+}
+
+function parseStudentNames(raw: string): ParsedStudent[] {
+  // Split on commas, newlines, or tabs
+  const parts = raw
+    .split(/[\n\r\t,]+/)
+    .map(s => s.trim())
+    .filter(s => s.length > 0);
+
+  // Deduplicate
+  const seen = new Set<string>();
+  const unique: string[] = [];
+  for (const p of parts) {
+    const key = p.toLowerCase();
+    if (!seen.has(key)) {
+      seen.add(key);
+      unique.push(p);
+    }
+  }
+
+  return unique.map(name => {
+    // Derive initials from first letter of each word
+    const words = name.split(/\s+/).filter(w => w.length > 0);
+    const initials = words.map(w => w[0].toUpperCase()).join("").slice(0, 4);
+    return { display_name: name, initials };
+  });
+}
+
+/* ── Bulk Add Student Modal ─────────────────────────── */
+function BulkAddStudentsModal({
+  open,
+  onClose,
+  onAdded,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onAdded: () => void;
+}) {
+  const [rawInput, setRawInput] = useState("");
+  const [grade, setGrade] = useState("");
+  const [classroom, setClassroom] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [results, setResults] = useState<{ display_name: string; success: boolean; error?: string }[] | null>(null);
+  const { legacyToken: token } = useLegacyToken();
+
+  const parsed = useMemo(() => parseStudentNames(rawInput), [rawInput]);
+
+  if (!open) return null;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (parsed.length === 0) {
+      setError("Enter at least one student name.");
+      return;
+    }
+    if (parsed.length > 50) {
+      setError("You can add up to 50 students at once. You have " + parsed.length + ".");
+      return;
+    }
+    setSubmitting(true);
+    setError("");
+    setResults(null);
+    try {
+      const res = await fetch("/api/students/bulk", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          students: parsed,
+          grade: grade.trim(),
+          classroom: classroom.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to add students");
+      }
+      setResults(data.results);
+      if (data.summary.failed === 0) {
+        // All succeeded — clear and close after short delay
+        setTimeout(() => {
+          setRawInput("");
+          setGrade("");
+          setClassroom("");
+          setResults(null);
+          onAdded();
+          onClose();
+        }, 1500);
+      } else {
+        // Some failed — let user review, but still refresh
+        onAdded();
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleClose = () => {
+    if (!submitting) {
+      setRawInput("");
+      setGrade("");
+      setClassroom("");
+      setError("");
+      setResults(null);
+      onClose();
+    }
+  };
+
+  const allSucceeded = results && results.every(r => r.success);
+  const someFailed = results && results.some(r => !r.success);
+
+  return (
+    <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}>
+      <div className="modal" style={{ maxWidth: 560 }} onClick={(e) => e.stopPropagation()}>
+        <div className="modal__header">
+          <h2 className="modal__title">Bulk Add Students</h2>
+          <button className="modal__close" onClick={handleClose} aria-label="Close"><X size={18} /></button>
+        </div>
+        <form onSubmit={handleSubmit}>
+          <div className="modal__body">
+            {error && <div className="alert alert--error">{error}</div>}
+
+            {/* Results summary */}
+            {results && (
+              <div className={`alert ${allSucceeded ? "alert--success" : "alert--warning"}`} style={{ marginBottom: "var(--space-md)" }}>
+                {allSucceeded ? (
+                  <><CheckCircle2 size={16} style={{ marginRight: 6 }} />All {results.length} students added successfully!</>
+                ) : (
+                  <><AlertCircle size={16} style={{ marginRight: 6 }} />{results.filter(r => r.success).length} added, {results.filter(r => !r.success).length} failed</>
+                )}
+              </div>
+            )}
+
+            <div className="form-group">
+              <label className="form-label" htmlFor="bulk-names">
+                Student Names *
+              </label>
+              <p className="form-help" style={{ fontSize: "0.75rem", color: "var(--color-gray-400)", marginTop: 2, marginBottom: "var(--space-sm)" }}>
+                Paste names separated by commas or new lines. Example: John Smith, Jane Doe
+              </p>
+              <textarea
+                id="bulk-names"
+                className="form-input"
+                rows={5}
+                style={{ resize: "vertical", minHeight: 100, fontFamily: "var(--font-mono)", fontSize: "0.85rem" }}
+                value={rawInput}
+                onChange={(e) => { setRawInput(e.target.value); setResults(null); }}
+                placeholder={"John Smith\nJane Doe\nAlex Johnson"}
+                autoFocus
+                disabled={submitting}
+              />
+            </div>
+
+            {/* Preview */}
+            {parsed.length > 0 && !results && (
+              <div style={{ marginBottom: "var(--space-md)" }}>
+                <p className="form-label" style={{ marginBottom: "var(--space-sm)" }}>
+                  Preview ({parsed.length} student{parsed.length !== 1 ? "s" : ""})
+                </p>
+                <div style={{
+                  maxHeight: 180,
+                  overflowY: "auto",
+                  border: "1px solid var(--color-gray-200)",
+                  borderRadius: "var(--radius-sm)",
+                  background: "var(--color-gray-50)",
+                }}>
+                  {parsed.map((s, i) => (
+                    <div key={i} style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "var(--space-sm)",
+                      padding: "var(--space-xs) var(--space-sm)",
+                      borderBottom: i < parsed.length - 1 ? "1px solid var(--color-gray-200)" : "none",
+                      fontSize: "0.85rem",
+                    }}>
+                      <span style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: 28,
+                        height: 28,
+                        borderRadius: "var(--radius-sm)",
+                        background: "var(--color-primary-bg)",
+                        color: "var(--color-primary)",
+                        fontWeight: 700,
+                        fontSize: "0.75rem",
+                        flexShrink: 0,
+                      }}>
+                        {s.initials}
+                      </span>
+                      <span style={{ flex: 1 }}>{s.display_name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Results list (when some failed) */}
+            {someFailed && (
+              <div style={{ marginBottom: "var(--space-md)" }}>
+                <p className="form-label" style={{ marginBottom: "var(--space-sm)", color: "var(--color-danger)" }}>
+                  Failed entries
+                </p>
+                <div style={{
+                  maxHeight: 140,
+                  overflowY: "auto",
+                  border: "1px solid var(--color-danger-bg)",
+                  borderRadius: "var(--radius-sm)",
+                  background: "var(--color-danger-bg)",
+                }}>
+                  {results!.filter(r => !r.success).map((r, i) => (
+                    <div key={i} style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "var(--space-sm)",
+                      padding: "var(--space-xs) var(--space-sm)",
+                      borderBottom: "1px solid #fecaca",
+                      fontSize: "0.8rem",
+                      color: "var(--color-danger-dark)",
+                    }}>
+                      <AlertCircle size={14} style={{ flexShrink: 0 }} />
+                      <span style={{ flex: 1 }}>{r.display_name}</span>
+                      <span style={{ fontSize: "0.75rem", opacity: 0.8 }}>{r.error}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-sm">
+              <div className="form-group flex-1">
+                <label className="form-label" htmlFor="bulk-grade">Grade (optional)</label>
+                <input id="bulk-grade" className="form-input" value={grade} onChange={(e) => setGrade(e.target.value)} placeholder="e.g. 3" disabled={submitting} />
+              </div>
+              <div className="form-group flex-1">
+                <label className="form-label" htmlFor="bulk-classroom">Classroom (optional)</label>
+                <input id="bulk-classroom" className="form-input" value={classroom} onChange={(e) => setClassroom(e.target.value)} placeholder="e.g. Room 204" disabled={submitting} />
+              </div>
+            </div>
+            <p className="form-help" style={{ fontSize: "0.75rem", color: "var(--color-gray-400)", marginTop: 2 }}>
+              Grade and classroom apply to all students in this batch.
+            </p>
+          </div>
+          <div className="modal__footer">
+            <button type="button" className="btn btn--ghost" onClick={handleClose} disabled={submitting}>Cancel</button>
+            <button
+              type="submit"
+              className="btn btn--primary"
+              disabled={submitting || parsed.length === 0 || (allSucceeded === true)}
+            >
+              {submitting ? "Adding..." : allSucceeded ? "Done!" : `Add ${parsed.length} Student${parsed.length !== 1 ? "s" : ""}`}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 /* ── Main Students Page ────────────────────────────── */
 export default function Students() {
   const [students, setStudents] = useState<Student[]>([]);
@@ -153,6 +421,7 @@ export default function Students() {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showBulkAddModal, setShowBulkAddModal] = useState(false);
   const { legacyToken: token } = useLegacyToken();
 
   const fetchStudents = () => {
@@ -203,9 +472,14 @@ export default function Students() {
     <div>
       <div className="flex items-center justify-between mb-md">
         <h1>Students</h1>
-        <button className="btn btn--primary btn--sm" onClick={() => setShowAddModal(true)}>
-          <Plus size={16} /> Add Student
-        </button>
+        <div style={{ display: "flex", gap: "var(--space-sm)", flexWrap: "wrap" }}>
+          <button className="btn btn--secondary btn--sm" onClick={() => setShowBulkAddModal(true)}>
+            <Upload size={16} /> Bulk Add
+          </button>
+          <button className="btn btn--primary btn--sm" onClick={() => setShowAddModal(true)}>
+            <Plus size={16} /> Add Student
+          </button>
+        </div>
       </div>
 
       {/* Search */}
@@ -313,6 +587,12 @@ export default function Students() {
       <AddStudentModal
         open={showAddModal}
         onClose={() => setShowAddModal(false)}
+        onAdded={fetchStudents}
+      />
+
+      <BulkAddStudentsModal
+        open={showBulkAddModal}
+        onClose={() => setShowBulkAddModal(false)}
         onAdded={fetchStudents}
       />
     </div>
